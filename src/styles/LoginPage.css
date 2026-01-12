@@ -1,0 +1,172 @@
+/* Main container full screen */
+.login-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+/* Card Style */
+.login-card {
+    background-color: var(--bg-white);
+    border-radius: 1rem;
+    /* rounded-2xl */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    /* shadow-2xl */
+    width: 100%;
+    max-width: 28rem;
+    /* max-w-md */
+    padding: 2rem;
+}
+
+/* Header Section */
+.login-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.logo-container {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: 9999px;
+    /* rounded-full */
+    background: var(--primary-gradient);
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.logo-icon {
+    color: white;
+}
+
+.login-header h1 {
+    font-size: 1.875rem;
+    /* text-3xl */
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: var(--primary-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: translate;
+    /* Fallback */
+    color: transparent;
+}
+
+.login-header p {
+    color: var(--text-gray-600);
+}
+
+/* Role Selection */
+.role-section {
+    margin-bottom: 1.5rem;
+}
+
+.section-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-gray-700);
+    margin-bottom: 0.75rem;
+}
+
+.role-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.role-btn {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-lg);
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    background-color: var(--bg-gray-100);
+    color: var(--text-gray-700);
+}
+
+.role-btn:hover {
+    background-color: #e5e7eb;
+    /* gray-200 */
+}
+
+/* Active States for Roles */
+.role-btn.admin.active {
+    background: var(--admin-gradient);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.role-btn.faculty.active {
+    background: var(--faculty-gradient);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+.role-btn.student.active {
+    background: var(--student-gradient);
+    color: white;
+    transform: scale(1.05);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Form Styles */
+.login-form {
+    margin-bottom: 1rem;
+}
+
+.form-group {
+    margin-bottom: 1rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.625rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    outline: none;
+    transition: box-shadow 0.2s;
+}
+
+.form-group input:focus {
+    border-color: transparent;
+    box-shadow: 0 0 0 2px var(--purple-500);
+}
+
+.signin-btn {
+    width: 100%;
+    padding: 0.75rem;
+    background: var(--primary-gradient);
+    color: white;
+    font-weight: 500;
+    border-radius: var(--radius-lg);
+    margin-top: 0.5rem;
+    transition: transform 0.1s;
+    box-shadow: var(--shadow-lg);
+}
+
+.signin-btn:hover {
+    opacity: 0.9;
+    transform: scale(1.02);
+}
+
+.demo-note {
+    text-align: center;
+    font-size: 0.875rem;
+    color: var(--text-gray-500);
+    margin-top: 1.5rem;
+}
