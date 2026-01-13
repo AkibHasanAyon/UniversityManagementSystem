@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { BookOpen, Users, LogOut, Menu, X, GraduationCap } from 'lucide-react';
-import { ViewAssignedCourses } from '../faculty/ViewAssignedCourses';
-import { ViewStudents } from '../faculty/ViewStudents';
-import { SubmitGrades } from '../faculty/SubmitGrades';
-import { UpdateGrades } from '../faculty/UpdateGrades';
+import { ViewAssignedCourses } from './ViewAssignedCourses';
+import { ViewStudents } from './ViewStudents';
+import { SubmitGrades } from './SubmitGrades';
+import { UpdateGrades } from './UpdateGrades';
 import '../../styles/Dashboard.css';
 
 // Placeholder removed

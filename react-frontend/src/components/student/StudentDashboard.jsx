@@ -1,44 +1,35 @@
 import React, { useState } from 'react';
-import { Users, BookOpen, GraduationCap, LogOut, Menu, X } from 'lucide-react';
-import { ManageStudents } from '../admin/ManageStudents';
-import { ManageFaculty } from '../admin/ManageFaculty';
-import { ManageCourses } from '../admin/ManageCourses';
-import { AssignCourses } from '../admin/AssignCourses';
-import { ViewRecords } from '../admin/ViewRecords';
+import { BookOpen, Award, LogOut, Menu, X, GraduationCap, FileText } from 'lucide-react';
+import { ViewEnrollment } from './ViewEnrollment';
+import { ViewGrades } from './ViewGrades';
+import { AcademicHistory } from './AcademicHistory';
 import '../../styles/Dashboard.css';
+import '../../styles/StudentDashboard.css';
 
-// Placeholder removed
-
-export function AdminDashboard({ user, onLogout }) {
+export function StudentDashboard({ user, onLogout }) {
     const [currentView, setCurrentView] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    // Navigation Items
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Menu },
-        { id: 'students', label: 'Manage Students', icon: Users },
-        { id: 'faculty', label: 'Manage Faculty', icon: Users },
-        { id: 'courses', label: 'Manage Courses', icon: BookOpen },
-        { id: 'assign', label: 'Assign Courses', icon: GraduationCap },
-        { id: 'records', label: 'Academic Records', icon: BookOpen },
+        { id: 'enrollment', label: 'Course Enrollment', icon: BookOpen },
+        { id: 'grades', label: 'View Grades', icon: Award },
+        { id: 'history', label: 'Academic Records', icon: FileText },
     ];
 
-    // Render content based on selected view
     const renderContent = () => {
         switch (currentView) {
             case 'overview': return <OverviewCards />;
-            case 'students': return <ManageStudents />;
-            case 'faculty': return <ManageFaculty />;
-            case 'courses': return <ManageCourses />;
-            case 'assign': return <AssignCourses />;
-            case 'records': return <ViewRecords />;
+            case 'enrollment': return <ViewEnrollment />;
+            case 'grades': return <ViewGrades />;
+            case 'history': return <AcademicHistory />;
             default: return <OverviewCards />;
         }
     };
 
     return (
-        <div className="dashboard-layout">
-            {/* Sidebar Navigation */}
+        <div className="dashboard-layout student-theme">
+            {/* Sidebar */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
                 <div className="sidebar-header">
                     {sidebarOpen && (
@@ -48,7 +39,7 @@ export function AdminDashboard({ user, onLogout }) {
                             </div>
                             <div className="logo-text">
                                 <span className="brand">UMS</span>
-                                <span className="subtitle">Admin Panel</span>
+                                <span className="subtitle">Student Portal</span>
                             </div>
                         </div>
                     )}
@@ -58,7 +49,7 @@ export function AdminDashboard({ user, onLogout }) {
                 </div>
 
                 <nav className="sidebar-nav">
-                    {menuItems.map(item => {
+                    {menuItems.map((item) => {
                         const Icon = item.icon;
                         return (
                             <button
@@ -70,17 +61,17 @@ export function AdminDashboard({ user, onLogout }) {
                                 <Icon size={20} />
                                 {sidebarOpen && <span>{item.label}</span>}
                             </button>
-                        )
+                        );
                     })}
                 </nav>
             </aside>
 
-            {/* Main Content Area */}
+            {/* Main Content */}
             <div className="main-wrapper">
                 <header className="top-header">
                     <div className="header-title">
-                        <h1>Administrator Dashboard</h1>
-                        <p>Manage university operations</p>
+                        <h1>Student Dashboard</h1>
+                        <p>Track your academic progress</p>
                     </div>
                     <div className="header-profile">
                         <div className="user-info">
@@ -88,7 +79,7 @@ export function AdminDashboard({ user, onLogout }) {
                             <span className="email">{user.email}</span>
                         </div>
                         <div className="avatar">
-                            {user.name.charAt(0)}
+                            {user.name.split(' ').map(n => n[0]).join('')}
                         </div>
                         <button onClick={onLogout} className="logout-btn" title="Logout">
                             <LogOut size={20} />
@@ -104,45 +95,47 @@ export function AdminDashboard({ user, onLogout }) {
     );
 }
 
-// Overview Component
 function OverviewCards() {
     const stats = [
-        { label: 'Total Students', value: '2,847', icon: Users, colorClass: 'blue' },
-        { label: 'Total Faculty', value: '186', icon: Users, colorClass: 'green' },
-        { label: 'Total Courses', value: '342', icon: BookOpen, colorClass: 'purple' },
+        { label: 'Enrolled Courses', value: '5', icon: BookOpen, gradient: 'linear-gradient(to bottom right, #a855f7, #ec4899)' },
+        { label: 'Current GPA', value: '3.72', icon: Award, gradient: 'linear-gradient(to bottom right, #3b82f6, #06b6d4)' },
     ];
 
     return (
         <div className="overview-container">
-            <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>System Overview</h2>
+            <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>Your Academic Summary</h2>
 
-            {/* Statistics Cards */}
             <div className="stats-grid">
-                {stats.map((stat, i) => {
+                {stats.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
-                        <div key={i} className="stat-card">
+                        <div key={index} className="stat-card">
                             <div className="stat-info">
                                 <span className="label">{stat.label}</span>
                                 <span className="value">{stat.value}</span>
                             </div>
-                            <div className={`stat-icon ${stat.colorClass}`}>
+                            <div className="stat-icon" style={{ background: stat.gradient }}>
                                 <Icon size={24} color="white" />
                             </div>
                         </div>
-                    )
+                    );
                 })}
             </div>
 
-            {/* Quick Actions Section */}
-            <div className="quick-actions">
-                <h3>Quick Actions</h3>
-                <div className="actions-grid">
-                    <button className="action-btn blue">Add New Student</button>
-                    <button className="action-btn green">Add New Faculty</button>
-                    <button className="action-btn purple">Create New Course</button>
+            <div className="summary-box" style={{ background: 'white', marginTop: '32px' }}>
+                <h3 className="summary-title" style={{ color: 'var(--text-gray-900)', fontSize: '1.125rem', marginBottom: '16px' }}>Current Semester Courses</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {['CS301 - Database Systems', 'MATH201 - Linear Algebra', 'PHY101 - Physics I', 'ENG202 - Technical Writing', 'CS302 - Algorithms'].map((course, idx) => (
+                        <div key={idx} className="course-item">
+                            <div style={{ display: 'flex', alignItems: 'center' }}>
+                                <div className="progress-dot"></div>
+                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-gray-900)' }}>{course}</span>
+                            </div>
+                            <span className="in-progress-badge">In Progress</span>
+                        </div>
+                    ))}
                 </div>
             </div>
         </div>
-    )
+    );
 }

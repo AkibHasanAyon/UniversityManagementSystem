@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { LoginPage } from './components/login/LoginPage';
-import { AdminDashboard } from './components/dashboard/AdminDashboard';
-import { FacultyDashboard } from './components/dashboard/FacultyDashboard';
-import { StudentDashboard } from './components/dashboard/StudentDashboard';
+import { AdminDashboard } from './components/admin/AdminDashboard';
+import { FacultyDashboard } from './components/faculty/FacultyDashboard';
+import { StudentDashboard } from './components/student/StudentDashboard';
 import './App.css';
 
 function App() {
