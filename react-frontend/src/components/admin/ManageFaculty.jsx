@@ -4,11 +4,11 @@ import '../../styles/Dashboard.css';
 
 export function ManageFaculty() {
     const [faculty, setFaculty] = useState([
-        { id: 'FAC001', name: 'Prof. Michael Chen', email: 'michael.chen@university.edu', department: 'Computer Science', specialization: 'Database Systems', joinDate: '2018-08-15' },
-        { id: 'FAC002', name: 'Dr. Sarah Johnson', email: 'sarah.j@university.edu', department: 'Mathematics', specialization: 'Linear Algebra', joinDate: '2015-01-20' },
-        { id: 'FAC003', name: 'Prof. David Martinez', email: 'david.m@university.edu', department: 'Physics', specialization: 'Quantum Mechanics', joinDate: '2017-09-10' },
-        { id: 'FAC004', name: 'Dr. Emily Wang', email: 'emily.w@university.edu', department: 'Engineering', specialization: 'Thermodynamics', joinDate: '2019-03-05' },
-        { id: 'FAC005', name: 'Prof. Robert Taylor', email: 'robert.t@university.edu', department: 'Business', specialization: 'Finance', joinDate: '2016-07-12' },
+        { id: 'FAC001', name: 'Prof. Rahman', email: 'rahman@university.edu', department: 'Computer Science', specialization: 'Database Systems', joinDate: '2018-08-15' },
+        { id: 'FAC002', name: 'Dr. Farhana', email: 'farhana@university.edu', department: 'Mathematics', specialization: 'Linear Algebra', joinDate: '2015-01-20' },
+        { id: 'FAC003', name: 'Prof. Jamal Uddin', email: 'jamal.uddin@university.edu', department: 'Physics', specialization: 'Quantum Mechanics', joinDate: '2017-09-10' },
+        { id: 'FAC004', name: 'Dr. Nusrat Jahan', email: 'nusrat.j@university.edu', department: 'Engineering', specialization: 'Thermodynamics', joinDate: '2019-03-05' },
+        { id: 'FAC005', name: 'Prof. Rafiqul Islam', email: 'rafiqul.islam@university.edu', department: 'Business', specialization: 'Finance', joinDate: '2016-07-12' },
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');

@@ -4,12 +4,12 @@ import '../../styles/Dashboard.css';
 
 export function ManageStudents() {
     const [students, setStudents] = useState([
-        { id: 'STU001', name: 'Emily Rodriguez', email: 'emily.r@university.edu', major: 'Computer Science', year: '3rd', gpa: '3.72' },
-        { id: 'STU002', name: 'James Wilson', email: 'james.w@university.edu', major: 'Mathematics', year: '2nd', gpa: '3.85' },
-        { id: 'STU003', name: 'Sophia Chen', email: 'sophia.c@university.edu', major: 'Physics', year: '4th', gpa: '3.91' },
-        { id: 'STU004', name: 'Michael Brown', email: 'michael.b@university.edu', major: 'Engineering', year: '1st', gpa: '3.65' },
-        { id: 'STU005', name: 'Olivia Martinez', email: 'olivia.m@university.edu', major: 'Business', year: '3rd', gpa: '3.78' },
-        { id: 'STU006', name: 'Daniel Kim', email: 'daniel.k@university.edu', major: 'Computer Science', year: '2nd', gpa: '3.88' },
+        { id: 'STU001', name: 'Ayesha Siddiqua', email: 'ayesha.s@university.edu', major: 'Computer Science', year: '3rd', gpa: '3.72' },
+        { id: 'STU002', name: 'Rahim Ahmed', email: 'rahim.a@university.edu', major: 'Mathematics', year: '2nd', gpa: '3.85' },
+        { id: 'STU003', name: 'Sadia Islam', email: 'sadia.i@university.edu', major: 'Physics', year: '4th', gpa: '3.91' },
+        { id: 'STU004', name: 'Karim Uddin', email: 'karim.u@university.edu', major: 'Engineering', year: '1st', gpa: '3.65' },
+        { id: 'STU005', name: 'Fatema Begum', email: 'fatema.b@university.edu', major: 'Business', year: '3rd', gpa: '3.78' },
+        { id: 'STU006', name: 'Tanvir Hasan', email: 'tanvir.h@university.edu', major: 'Computer Science', year: '2nd', gpa: '3.88' },
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');

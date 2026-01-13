@@ -11,9 +11,9 @@ function App() {
   const handleLogin = (role, email) => {
     // Mock login logic - simulates API response
     const mockUsers = {
-      admin: { role: 'admin', name: 'Dr. Ikhtiar Uddin Muhammad Bakhtiyar Khilji', email: email, id: 'ADM001' },
-      faculty: { role: 'faculty', name: 'Prof. Michael Chen', email: email, id: 'FAC001' },
-      student: { role: 'student', name: 'Emily Rodriguez', email: email, id: 'STU001' }
+      admin: { role: 'admin', name: 'Dr. Harun Ur Rashid', email: email, id: 'ADM001' },
+      faculty: { role: 'faculty', name: 'Prof. Rahman', email: email, id: 'FAC001' },
+      student: { role: 'student', name: 'Ayesha Siddiqua', email: email, id: 'STU001' }
     };
 
     if (role && mockUsers[role]) {

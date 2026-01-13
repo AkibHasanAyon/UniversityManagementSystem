@@ -3,11 +3,11 @@ import '../../styles/StudentDashboard.css';
 
 export function ViewEnrollment() {
     const enrolledCourses = [
-        { code: 'CS301', name: 'Database Systems', instructor: 'Prof. Michael Chen', credits: 3, semester: 'Fall 2025', status: 'Active' },
-        { code: 'MATH201', name: 'Linear Algebra', instructor: 'Dr. Sarah Johnson', credits: 4, semester: 'Fall 2025', status: 'Active' },
-        { code: 'PHY101', name: 'Physics I', instructor: 'Prof. David Martinez', credits: 4, semester: 'Fall 2025', status: 'Active' },
-        { code: 'ENG202', name: 'Technical Writing', instructor: 'Dr. Rebecca Smith', credits: 3, semester: 'Fall 2025', status: 'Active' },
-        { code: 'CS302', name: 'Algorithms', instructor: 'Prof. Michael Chen', credits: 3, semester: 'Fall 2025', status: 'Active' },
+        { code: 'CS301', name: 'Database Systems', instructor: 'Prof. Rahman', credits: 3, semester: 'Fall 2025', status: 'Active' },
+        { code: 'MATH201', name: 'Linear Algebra', instructor: 'Dr. Farhana', credits: 4, semester: 'Fall 2025', status: 'Active' },
+        { code: 'PHY101', name: 'Physics I', instructor: 'Prof. Jamal Uddin', credits: 4, semester: 'Fall 2025', status: 'Active' },
+        { code: 'ENG202', name: 'Technical Writing', instructor: 'Dr. Nargis Parvin', credits: 3, semester: 'Fall 2025', status: 'Active' },
+        { code: 'CS302', name: 'Algorithms', instructor: 'Prof. Rahman', credits: 3, semester: 'Fall 2025', status: 'Active' },
     ];
 
     return (

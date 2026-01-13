@@ -4,12 +4,12 @@ import '../../styles/Dashboard.css';
 
 export function ViewStudents() {
     const [students] = useState([
-        { id: 'STU001', name: 'Emily Rodriguez', email: 'emily.r@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
-        { id: 'STU002', name: 'James Wilson', email: 'james.w@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
-        { id: 'STU006', name: 'Daniel Kim', email: 'daniel.k@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
-        { id: 'STU007', name: 'Sarah Thompson', email: 'sarah.t@university.edu', course: 'CS302 - Algorithms', enrollmentDate: '2026-01-15' },
-        { id: 'STU008', name: 'Alex Morgan', email: 'alex.m@university.edu', course: 'CS302 - Algorithms', enrollmentDate: '2026-01-15' },
-        { id: 'STU009', name: 'Jessica Lee', email: 'jessica.l@university.edu', course: 'CS405 - Software Engineering', enrollmentDate: '2025-08-25' },
+        { id: 'STU001', name: 'Ayesha Siddiqua', email: 'ayesha.s@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
+        { id: 'STU002', name: 'Rahim Ahmed', email: 'rahim.a@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
+        { id: 'STU006', name: 'Tanvir Hasan', email: 'tanvir.h@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
+        { id: 'STU007', name: 'Salma Begum', email: 'salma.b@university.edu', course: 'CS302 - Algorithms', enrollmentDate: '2026-01-15' },
+        { id: 'STU008', name: 'Ali Hossain', email: 'ali.h@university.edu', course: 'CS302 - Algorithms', enrollmentDate: '2026-01-15' },
+        { id: 'STU009', name: 'Jasmine Akter', email: 'jasmine.a@university.edu', course: 'CS405 - Software Engineering', enrollmentDate: '2025-08-25' },
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');

@@ -16,16 +16,16 @@ export function SubmitGrades() {
 
     const students = {
         'CS301': [
-            { id: 'STU001', name: 'Emily Rodriguez' },
-            { id: 'STU002', name: 'James Wilson' },
-            { id: 'STU006', name: 'Daniel Kim' },
+            { id: 'STU001', name: 'Ayesha Siddiqua' },
+            { id: 'STU002', name: 'Rahim Ahmed' },
+            { id: 'STU006', name: 'Tanvir Hasan' },
         ],
         'CS302': [
-            { id: 'STU007', name: 'Sarah Thompson' },
-            { id: 'STU008', name: 'Alex Morgan' },
+            { id: 'STU007', name: 'Salma Begum' },
+            { id: 'STU008', name: 'Ali Hossain' },
         ],
         'CS405': [
-            { id: 'STU009', name: 'Jessica Lee' },
+            { id: 'STU009', name: 'Jasmine Akter' },
         ],
         'CS201': [],
     };

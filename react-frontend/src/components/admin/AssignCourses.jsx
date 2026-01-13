@@ -4,10 +4,10 @@ import '../../styles/Dashboard.css';
 
 export function AssignCourses() {
     const [assignments, setAssignments] = useState([
-        { facultyId: 'FAC001', facultyName: 'Prof. Michael Chen', courseId: 'CRS001', courseCode: 'CS301', courseName: 'Database Systems' },
-        { facultyId: 'FAC001', facultyName: 'Prof. Michael Chen', courseId: 'CRS005', courseCode: 'CS302', courseName: 'Algorithms' },
-        { facultyId: 'FAC002', facultyName: 'Dr. Sarah Johnson', courseId: 'CRS002', courseCode: 'MATH201', courseName: 'Linear Algebra' },
-        { facultyId: 'FAC003', facultyName: 'Prof. David Martinez', courseId: 'CRS003', courseCode: 'PHY101', courseName: 'Physics I' },
+        { facultyId: 'FAC001', facultyName: 'Prof. Rahman', courseId: 'CRS001', courseCode: 'CS301', courseName: 'Database Systems' },
+        { facultyId: 'FAC001', facultyName: 'Prof. Rahman', courseId: 'CRS005', courseCode: 'CS302', courseName: 'Algorithms' },
+        { facultyId: 'FAC002', facultyName: 'Dr. Farhana', courseId: 'CRS002', courseCode: 'MATH201', courseName: 'Linear Algebra' },
+        { facultyId: 'FAC003', facultyName: 'Prof. Jamal Uddin', courseId: 'CRS003', courseCode: 'PHY101', courseName: 'Physics I' },
     ]);
 
     const [selectedFaculty, setSelectedFaculty] = useState('');
@@ -15,11 +15,11 @@ export function AssignCourses() {
     const [showSuccess, setShowSuccess] = useState(false);
 
     const faculty = [
-        { id: 'FAC001', name: 'Prof. Michael Chen' },
-        { id: 'FAC002', name: 'Dr. Sarah Johnson' },
-        { id: 'FAC003', name: 'Prof. David Martinez' },
-        { id: 'FAC004', name: 'Dr. Emily Wang' },
-        { id: 'FAC005', name: 'Prof. Robert Taylor' },
+        { id: 'FAC001', name: 'Prof. Rahman' },
+        { id: 'FAC002', name: 'Dr. Farhana' },
+        { id: 'FAC003', name: 'Prof. Jamal Uddin' },
+        { id: 'FAC004', name: 'Dr. Nusrat Jahan' },
+        { id: 'FAC005', name: 'Prof. Rafiqul Islam' },
     ];
 
     const courses = [

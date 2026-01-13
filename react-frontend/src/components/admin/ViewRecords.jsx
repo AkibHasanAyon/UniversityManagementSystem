@@ -4,15 +4,15 @@ import '../../styles/Dashboard.css';
 
 export function ViewRecords() {
     const [records] = useState([
-        { studentId: 'STU001', studentName: 'Emily Rodriguez', courseCode: 'CS301', courseName: 'Database Systems', grade: 'A', semester: 'Fall 2025', credits: 3 },
-        { studentId: 'STU001', studentName: 'Emily Rodriguez', courseCode: 'MATH201', courseName: 'Linear Algebra', grade: 'A-', semester: 'Fall 2025', credits: 4 },
-        { studentId: 'STU001', studentName: 'Emily Rodriguez', courseCode: 'PHY101', courseName: 'Physics I', grade: 'B+', semester: 'Spring 2025', credits: 4 },
-        { studentId: 'STU002', studentName: 'James Wilson', courseCode: 'MATH201', courseName: 'Linear Algebra', grade: 'A', semester: 'Fall 2025', credits: 4 },
-        { studentId: 'STU002', studentName: 'James Wilson', courseCode: 'CS301', courseName: 'Database Systems', grade: 'A', semester: 'Fall 2025', credits: 3 },
-        { studentId: 'STU003', studentName: 'Sophia Chen', courseCode: 'PHY101', courseName: 'Physics I', grade: 'A', semester: 'Fall 2025', credits: 4 },
-        { studentId: 'STU003', studentName: 'Sophia Chen', courseCode: 'MATH201', courseName: 'Linear Algebra', grade: 'A', semester: 'Spring 2025', credits: 4 },
-        { studentId: 'STU004', studentName: 'Michael Brown', courseCode: 'ENG202', courseName: 'Technical Writing', grade: 'B', semester: 'Fall 2025', credits: 3 },
-        { studentId: 'STU005', studentName: 'Olivia Martinez', courseCode: 'CS302', courseName: 'Algorithms', grade: 'A-', semester: 'Fall 2025', credits: 3 },
+        { studentId: 'STU001', studentName: 'Ayesha Siddiqua', courseCode: 'CS301', courseName: 'Database Systems', grade: 'A', semester: 'Fall 2025', credits: 3 },
+        { studentId: 'STU001', studentName: 'Ayesha Siddiqua', courseCode: 'MATH201', courseName: 'Linear Algebra', grade: 'A-', semester: 'Fall 2025', credits: 4 },
+        { studentId: 'STU001', studentName: 'Ayesha Siddiqua', courseCode: 'PHY101', courseName: 'Physics I', grade: 'B+', semester: 'Spring 2025', credits: 4 },
+        { studentId: 'STU002', studentName: 'Rahim Ahmed', courseCode: 'MATH201', courseName: 'Linear Algebra', grade: 'A', semester: 'Fall 2025', credits: 4 },
+        { studentId: 'STU002', studentName: 'Rahim Ahmed', courseCode: 'CS301', courseName: 'Database Systems', grade: 'A', semester: 'Fall 2025', credits: 3 },
+        { studentId: 'STU003', studentName: 'Sadia Islam', courseCode: 'PHY101', courseName: 'Physics I', grade: 'A', semester: 'Fall 2025', credits: 4 },
+        { studentId: 'STU003', studentName: 'Sadia Islam', courseCode: 'MATH201', courseName: 'Linear Algebra', grade: 'A', semester: 'Spring 2025', credits: 4 },
+        { studentId: 'STU004', studentName: 'Karim Uddin', courseCode: 'ENG202', courseName: 'Technical Writing', grade: 'B', semester: 'Fall 2025', credits: 3 },
+        { studentId: 'STU005', studentName: 'Fatema Begum', courseCode: 'CS302', courseName: 'Algorithms', grade: 'A-', semester: 'Fall 2025', credits: 3 },
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');

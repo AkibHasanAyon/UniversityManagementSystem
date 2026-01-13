@@ -4,11 +4,11 @@ import '../../styles/Dashboard.css';
 
 export function UpdateGrades() {
     const [existingGrades, setExistingGrades] = useState([
-        { studentId: 'STU001', studentName: 'Emily Rodriguez', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A' },
-        { studentId: 'STU002', studentName: 'James Wilson', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A' },
-        { studentId: 'STU006', studentName: 'Daniel Kim', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A-' },
-        { studentId: 'STU007', studentName: 'Sarah Thompson', courseCode: 'CS302', courseName: 'Algorithms', currentGrade: 'B+' },
-        { studentId: 'STU008', studentName: 'Alex Morgan', courseCode: 'CS302', courseName: 'Algorithms', currentGrade: 'A-' },
+        { studentId: 'STU001', studentName: 'Ayesha Siddiqua', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A' },
+        { studentId: 'STU002', studentName: 'Rahim Ahmed', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A' },
+        { studentId: 'STU006', studentName: 'Tanvir Hasan', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A-' },
+        { studentId: 'STU007', studentName: 'Salma Begum', courseCode: 'CS302', courseName: 'Algorithms', currentGrade: 'B+' },
+        { studentId: 'STU008', studentName: 'Ali Hossain', courseCode: 'CS302', courseName: 'Algorithms', currentGrade: 'A-' },
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');
