@@ -164,9 +164,23 @@
     transform: scale(1.02);
 }
 
-.demo-note {
+/* Forgot Password Styles */
+.forgot-password {
     text-align: center;
+    margin-top: 1rem;
+}
+
+.text-btn {
+    background: none;
+    border: none;
+    color: var(--text-gray-600);
     font-size: 0.875rem;
-    color: var(--text-gray-500);
-    margin-top: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.2s;
+}
+
+.text-btn:hover {
+    color: var(--purple-600);
+    text-decoration: underline;
 }

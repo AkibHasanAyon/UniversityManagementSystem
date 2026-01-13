@@ -229,6 +229,20 @@ function StudentModal({ student, onClose, onSave }) {
                         />
                     </div>
 
+                    {!student && (
+                        <div className="form-group">
+                            <label>Temporary Password</label>
+                            <input
+                                type="text"
+                                value={formData.tempPassword || ''}
+                                onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
+                                className="input-field"
+                                placeholder="Assign a temporary password"
+                                required
+                            />
+                        </div>
+                    )}
+
                     <div className="form-group">
                         <label>Major</label>
                         <input

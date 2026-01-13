@@ -98,11 +98,17 @@ export function LoginPage({ onLogin }) {
                     <button type="submit" className="signin-btn">
                         Sign In
                     </button>
-                </form>
 
-                <p className="demo-note">
-                    Demo: Use any email/password to login
-                </p>
+                    <div className="forgot-password">
+                        <button
+                            type="button"
+                            className="text-btn"
+                            onClick={() => alert('Password reset link has been sent to your email')}
+                        >
+                            Forgot Password?
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     );

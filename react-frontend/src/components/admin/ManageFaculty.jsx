@@ -228,6 +228,20 @@ function FacultyModal({ faculty, onClose, onSave }) {
                         />
                     </div>
 
+                    {!faculty && (
+                        <div className="form-group">
+                            <label>Temporary Password</label>
+                            <input
+                                type="text"
+                                value={formData.tempPassword || ''}
+                                onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
+                                className="input-field"
+                                placeholder="Assign a temporary password"
+                                required
+                            />
+                        </div>
+                    )}
+
                     <div className="form-group">
                         <label>Department</label>
                         <input
