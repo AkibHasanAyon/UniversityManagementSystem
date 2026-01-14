@@ -75,10 +75,7 @@ export function FacultyDashboard({ user, onLogout }) {
                 <header className="top-header">
                     <div className="header-title">
                         <h1 style={{
-                            background: 'linear-gradient(to right, var(--emerald-500), var(--teal-500))',
-                            WebkitBackgroundClip: 'text',
-                            backgroundClip: 'text',
-                            color: 'transparent'
+                            color: 'var(--emerald-500)'
                         }}>Faculty Dashboard</h1>
                         <p>Manage your courses and students</p>
                     </div>

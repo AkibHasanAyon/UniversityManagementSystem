@@ -9,11 +9,11 @@
   --purple-500: #a855f7;
   --pink-500: #ec4899;
 
-  /* Gradients */
-  --primary-gradient: linear-gradient(to right, var(--indigo-600), var(--purple-600));
-  --admin-gradient: linear-gradient(to bottom right, var(--blue-500), var(--cyan-500));
-  --faculty-gradient: linear-gradient(to bottom right, var(--emerald-500), var(--teal-500));
-  --student-gradient: linear-gradient(to bottom right, var(--purple-500), var(--pink-500));
+  /* Gradients (Now Flat Colors) */
+  --primary-gradient: var(--indigo-600);
+  --admin-gradient: var(--blue-500);
+  --faculty-gradient: var(--emerald-500);
+  --student-gradient: var(--purple-500);
 
   /* Backgrounds */
   --bg-gray-100: #f3f4f6;

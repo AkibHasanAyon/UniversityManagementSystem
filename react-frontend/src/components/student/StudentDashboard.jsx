@@ -97,8 +97,8 @@ export function StudentDashboard({ user, onLogout }) {
 
 function OverviewCards() {
     const stats = [
-        { label: 'Enrolled Courses', value: '5', icon: BookOpen, gradient: 'linear-gradient(to bottom right, #a855f7, #ec4899)' },
-        { label: 'Current GPA', value: '3.72', icon: Award, gradient: 'linear-gradient(to bottom right, #3b82f6, #06b6d4)' },
+        { label: 'Enrolled Courses', value: '5', icon: BookOpen, color: '#a855f7' },
+        { label: 'Current GPA', value: '3.72', icon: Award, color: '#3b82f6' },
     ];
 
     return (
@@ -114,7 +114,7 @@ function OverviewCards() {
                                 <span className="label">{stat.label}</span>
                                 <span className="value">{stat.value}</span>
                             </div>
-                            <div className="stat-icon" style={{ background: stat.gradient }}>
+                            <div className="stat-icon" style={{ background: stat.color }}>
                                 <Icon size={24} color="white" />
                             </div>
                         </div>

@@ -48,12 +48,10 @@
     /* text-3xl */
     font-weight: 700;
     margin-bottom: 0.5rem;
-    background: var(--primary-gradient);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: translate;
-    /* Fallback */
-    color: transparent;
+    background: none;
+    -webkit-background-clip: user-select;
+    background-clip: border-box;
+    color: var(--primary-gradient);
 }
 
 .login-header p {

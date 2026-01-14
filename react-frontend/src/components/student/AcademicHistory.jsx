@@ -52,7 +52,7 @@ export function AcademicHistory() {
 
             {/* Overall Summary */}
             <div style={{
-                background: 'linear-gradient(to bottom right, white, #faf5ff)',
+                background: 'white',
                 borderRadius: 'var(--radius-xl)',
                 boxShadow: 'var(--shadow-lg)',
                 border: '1px solid var(--border-color)',
@@ -61,10 +61,10 @@ export function AcademicHistory() {
             }}>
                 <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-gray-900)', marginBottom: '16px' }}>Overall Academic Summary</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                    <StatsCard label="Cumulative GPA" value="3.72" gradient="linear-gradient(to bottom right, #a855f7, #ec4899)" />
-                    <StatsCard label="Total Credits" value="51" gradient="linear-gradient(to bottom right, #3b82f6, #06b6d4)" />
-                    <StatsCard label="Semesters" value="3" gradient="linear-gradient(to bottom right, #10b981, #14b8a6)" />
-                    <StatsCard label="Courses Completed" value="13" gradient="linear-gradient(to bottom right, #f97316, #ef4444)" />
+                    <StatsCard label="Cumulative GPA" value="3.72" color="#a855f7" />
+                    <StatsCard label="Total Credits" value="51" color="#3b82f6" />
+                    <StatsCard label="Semesters" value="3" color="#10b981" />
+                    <StatsCard label="Courses Completed" value="13" color="#f97316" />
                 </div>
             </div>
 
@@ -74,7 +74,7 @@ export function AcademicHistory() {
                     <div key={idx} className="table-container">
                         <div style={{
                             padding: '16px 24px',
-                            background: 'linear-gradient(to bottom right, #faf5ff, #fdf2f8)',
+                            background: '#faf5ff',
                             borderBottom: '1px solid var(--border-color)',
                             display: 'flex',
                             alignItems: 'center',
@@ -83,7 +83,7 @@ export function AcademicHistory() {
                             <h3 style={{ fontSize: '1.125rem', fontWeight: '700', color: 'var(--text-gray-900)' }}>{semester.semester}</h3>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ fontSize: '0.875rem', color: 'var(--text-gray-600)' }}>Semester GPA</p>
-                                <p style={{ fontSize: '1.25rem', fontWeight: '700', background: 'linear-gradient(to right, #9333ea, #db2777)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{semester.gpa}</p>
+                                <p style={{ fontSize: '1.25rem', fontWeight: '700', color: '#9333ea' }}>{semester.gpa}</p>
                             </div>
                         </div>
 
@@ -126,9 +126,9 @@ export function AcademicHistory() {
     );
 }
 
-function StatsCard({ label, value, gradient }) {
+function StatsCard({ label, value, color }) {
     return (
-        <div style={{ background: gradient, borderRadius: 'var(--radius-lg)', padding: '16px', color: 'white', boxShadow: 'var(--shadow-md)' }}>
+        <div style={{ background: color, borderRadius: 'var(--radius-lg)', padding: '16px', color: 'white', boxShadow: 'var(--shadow-md)' }}>
             <p style={{ fontSize: '0.875rem', marginBottom: '4px', opacity: 0.9 }}>{label}</p>
             <p style={{ fontSize: '1.5rem', fontWeight: '700' }}>{value}</p>
         </div>
