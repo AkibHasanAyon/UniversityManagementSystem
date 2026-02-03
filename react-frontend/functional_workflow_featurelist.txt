@@ -1,0 +1,102 @@
+# functional_workflow_featurelist.txt
+
+## University Management System - Functional Workflow & Feature List
+
+This document details the functional capabilities and user workflows for the University Management System web application.
+
+---
+
+### 1. Authentication & Role Selection
+*Feature*: **Role-Based Login**
+*   **Workflow**:
+    1.  User accesses the `LoginPage`.
+    2.  User clicks one of three role buttons: **Admin**, **Faculty**, or **Student**.
+    3.  User enters any email/password (system uses mock authentication).
+    4.  System directs user to the specific Dashboard for their selected role.
+
+---
+
+### 2. Admin Module
+*Actor*: Administrator
+*Objective*: Manage system entities (users, courses) and assignments.
+
+#### A. Manage Students
+*Feature*: **CRUD Operations for Students**
+*   **View List**: Displays paginated table of students with ID, Name, Email, Major, Year, and GPA. Supports searching by Name, Email, or ID.
+*   **Add Student**:
+    1.  Click "Add Student".
+    2.  Fill form: Student ID, Name, Email, Temporary Password, Major, Year, GPA.
+    3.  Click "Add Student" to save to the system.
+*   **Edit Student**:
+    1.  Click "Edit" icon on a student row.
+    2.  Modify fields (e.g., update GPA or Year).
+    3.  Click "Update Student".
+*   **Delete Student**:
+    1.  Click "Delete" icon.
+    2.  Confirm browser alert to remove the record.
+
+#### B. Manage Courses
+*Feature*: **Course Catalog Management**
+*   **View List**: Displays paginated table of courses with Code, Name, Department, Credits, Semester. Supports searching.
+*   **Add Course**:
+    1.  Click "Add Course".
+    2.  Fill form: Code (e.g., CS301), Name, Department, Credits, Semester.
+    3.  Save.
+*   **Edit/Delete**: Similar workflow to Student management.
+
+#### C. Assign Courses
+*Feature*: **Faculty-Course Mapping**
+*   **Workflow**:
+    1.  Navigate to "Assign Courses".
+    2.  Select a **Faculty Member** from the dropdown list.
+    3.  Select a **Course** from the dropdown list.
+    4.  Click "Assign Course".
+    5.  System validates and adds the pair to the "Current Course Assignments" table.
+    6.  Success message appears.
+
+---
+
+### 3. Faculty Module
+*Actor*: Faculty Member (Professor/Instructor)
+*Objective*: Manage assigned courses and grade students.
+
+#### A. View Assigned Courses
+*Feature*: **Teaching Schedule & Details**
+*   **Workflow**:
+    1.  View grid of assigned course cards.
+    2.  Card shows: Course Code, Name, Semester, Enrolled Count, Schedule (Time/Room).
+    3.  Click "View Details" to open a modal with full description and location info.
+
+#### B. Submit Grades
+*Feature*: **Grading Portal**
+*   **Workflow**:
+    1.  Select a specific **Course** from the dropdown.
+    2.  System populates a list of enrolled students for that course.
+        *   *Note*: Some courses may have 0 students (displays "No students enrolled").
+    3.  For each student, select a Grade (A, A-, B+, etc.) from the dropdown.
+    4.  Click "Submit All Grades".
+    5.  System displays a success confirmation.
+
+---
+
+### 4. Student Module
+*Actor*: Student
+*Objective*: View academic progress and records.
+
+#### A. Course Enrollment
+*Feature*: **Active Enrollment View**
+*   **Workflow**:
+    1.  Navigate to "Course Enrollment".
+    2.  View table of currently active courses.
+    3.  Columns: Code, Name, Instructor, Credits, Semester, Status (e.g., "Active").
+    4.  Summary box at bottom shows Total Courses and Total Credits.
+
+#### B. View Grades
+*Feature*: **Transcript & GPA**
+*   **Workflow**:
+    1.  Navigate to "View Grades".
+    2.  **GPA Card**: Instantly see calculated GPA (based on weighted credits) and total credits earned.
+    3.  **Grade Table**: Detailed list of courses with letter grades and calculated grade points (e.g., A = 4.0).
+    4.  **Visual Badges**: Color-coded badges for different grade tiers (Green for A, Yellow for B, etc.).
+
+---

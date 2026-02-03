@@ -3,7 +3,9 @@ import { BookOpen, Award, LogOut, Menu, X, GraduationCap, FileText } from 'lucid
 import { ViewEnrollment } from './ViewEnrollment';
 import { ViewGrades } from './ViewGrades';
 import { AcademicHistory } from './AcademicHistory';
+import { ClassScheduleWidget } from '../ClassScheduleWidget';
 import '../../styles/Dashboard.css';
+
 import '../../styles/StudentDashboard.css';
 
 export function StudentDashboard({ user, onLogout }) {
@@ -101,6 +103,13 @@ function OverviewCards() {
         { label: 'Current GPA', value: '3.72', icon: Award, color: '#3b82f6' },
     ];
 
+    const mockClasses = [
+        { courseCode: 'CS301', courseName: 'Database Systems', startTime: '10:00', endTime: '11:30', days: ['Mon', 'Wed'], room: '301', building: 'Academic Block A', instructor: 'Prof. Rahman', status: 'Scheduled' },
+        { courseCode: 'MATH201', courseName: 'Linear Algebra', startTime: '08:30', endTime: '10:00', days: ['Tue', 'Thu'], room: '202', building: 'Science Wing', instructor: 'Dr. Farhana', status: 'Scheduled' },
+        { courseCode: 'CS302', courseName: 'Algorithms', startTime: '13:00', endTime: '14:30', days: ['Mon', 'Wed'], room: '302', building: 'Academic Block A', instructor: 'Prof. Rahman', status: 'Rescheduled' },
+    ];
+
+
     return (
         <div className="overview-container">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>Your Academic Summary</h2>
@@ -122,7 +131,10 @@ function OverviewCards() {
                 })}
             </div>
 
+            <ClassScheduleWidget userRole="student" classes={mockClasses} />
+
             <div className="summary-box" style={{ background: 'white', marginTop: '32px' }}>
+
                 <h3 className="summary-title" style={{ color: 'var(--text-gray-900)', fontSize: '1.125rem', marginBottom: '16px' }}>Current Semester Courses</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {['CS301 - Database Systems', 'MATH201 - Linear Algebra', 'PHY101 - Physics I', 'ENG202 - Technical Writing', 'CS302 - Algorithms'].map((course, idx) => (

@@ -4,7 +4,9 @@ import { ViewAssignedCourses } from './ViewAssignedCourses';
 import { ViewStudents } from './ViewStudents';
 import { SubmitGrades } from './SubmitGrades';
 import { UpdateGrades } from './UpdateGrades';
+import { ClassScheduleWidget } from '../ClassScheduleWidget';
 import '../../styles/Dashboard.css';
+
 
 // Placeholder removed
 
@@ -107,6 +109,13 @@ function OverviewCards() {
         { label: 'Total Students', value: '187', icon: Users, colorClass: 'blue' },
     ];
 
+    const mockClasses = [
+        { courseCode: 'CS301', courseName: 'Database Systems', startTime: '10:00', endTime: '11:30', days: ['Mon', 'Wed'], room: '301', building: 'Academic Block A', type: 'Lecture', status: 'Scheduled' },
+        { courseCode: 'CS302', courseName: 'Algorithms', startTime: '13:00', endTime: '14:30', days: ['Mon', 'Wed'], room: '302', building: 'Academic Block A', type: 'Lab', status: 'Scheduled' },
+        { courseCode: 'CS401', courseName: 'Advanced DB', startTime: '09:00', endTime: '10:30', days: ['Tue'], room: '405', building: 'Academic Block B', type: 'Lecture', status: 'Scheduled' },
+    ];
+
+
     return (
         <div className="overview-container">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold' }}>Your Overview</h2>
@@ -126,6 +135,9 @@ function OverviewCards() {
                     )
                 })}
             </div>
+
+            <ClassScheduleWidget userRole="faculty" classes={mockClasses} />
         </div>
     )
 }
+

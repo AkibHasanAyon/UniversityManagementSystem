@@ -1,0 +1,62 @@
+# University Management System - Frontend Analysis
+
+This document provides an overview of the frontend architecture, user roles, workflows, and functionality of the University Management System (react-frontend).
+
+## 1. Architecture Overview
+- **Framework**: React (Vite)
+- **Routing**: Custom state-based routing (Single Page Application behavior without `react-router-dom`).
+- **Styling**: Vanilla CSS, leveraging CSS variables for theming.
+- **Icons**: `lucide-react` library.
+- **Entry Point**: `main.jsx` mounts `App.jsx`.
+
+## 2. User Roles & Authentication
+The application supports three distinct user roles. Authentication is currently simulated with mock data in `App.jsx`.
+
+1.  **Admin**: Full system control.
+2.  **Faculty**: Course and grade management.
+3.  **Student**: Personal academic progress tracking.
+
+**Workflow**:
+1.  User lands on `LoginPage`.
+2.  Selects a role (Admin, Faculty, or Student).
+3.  Enters credentials (mock login accepts any email).
+4.  `App.jsx` validates the role and renders the corresponding Dashboard component.
+
+## 3. Functionality by Role
+
+### A. Administrator (`AdminDashboard.jsx`)
+The admin dashboard acts as the central control hub. It features a sidebar navigation to toggle between different management views.
+
+**Core Features:**
+-   **Overview**: Displays system statistics (Total Students, Faculty, Courses) and quick actions.
+-   **Manage Students**: Interface to add, edit, or remove student records.
+-   **Manage Faculty**: Interface to add, edit, or remove faculty records.
+-   **Manage Courses**: Create and manage course catalog details.
+-   **Assign Courses**: functionality to map courses to faculty members.
+-   **Academic Records**: View overall academic records.
+
+### B. Faculty (`FacultyDashboard.jsx`)
+Tailored for professors and instructors to manage their specific academic responsibilities.
+
+**Core Features:**
+-   **Overview**: Summary of assigned courses and total students.
+-   **Assigned Courses**: List of courses the faculty member is teaching.
+-   **View Students**: List of students enrolled in their courses.
+-   **Submit Grades**: Interface for entering student grades.
+-   **Update Grades**: Functionality to modify previously submitted grades.
+
+### C. Student (`StudentDashboard.jsx`)
+A portal for students to view their own academic data.
+
+**Core Features:**
+-   **Overview**: Academic summary including enrolled course count, GPA, and current semester progress.
+-   **Course Enrollment**: Interface to browse and self-enroll in courses.
+-   **View Grades**: Display of grades for completed and ongoing courses.
+-   **Academic Records**: A history view of past performance and transcripts.
+
+## 4. Technical Workflow
+-   **State Management**: Local component state (`useState`) drives the UI navigation.
+    -   `App.jsx`: key state `currentUser` determines which Dashboard to mount.
+    -   Dashboards (`AdminDashboard` etc.): key state `currentView` determines which internal sub-component (feature) to render.
+-   **Data Flow**: currently uses static mock data within components. Components receive user context via props.
+-   **Navigation**: Sidebar buttons update the `currentView` state, causing a re-render of the main content area to show the selected feature.

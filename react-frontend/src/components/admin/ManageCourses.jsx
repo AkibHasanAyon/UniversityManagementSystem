@@ -4,12 +4,12 @@ import '../../styles/Dashboard.css';
 
 export function ManageCourses() {
     const [courses, setCourses] = useState([
-        { id: 'CRS001', code: 'CS301', name: 'Database Systems', department: 'Computer Science', credits: 3, semester: 'Fall 2025' },
-        { id: 'CRS002', code: 'MATH201', name: 'Linear Algebra', department: 'Mathematics', credits: 4, semester: 'Fall 2025' },
-        { id: 'CRS003', code: 'PHY101', name: 'Physics I', department: 'Physics', credits: 4, semester: 'Fall 2025' },
-        { id: 'CRS004', code: 'ENG202', name: 'Technical Writing', department: 'English', credits: 3, semester: 'Spring 2026' },
-        { id: 'CRS005', code: 'CS302', name: 'Algorithms', department: 'Computer Science', credits: 3, semester: 'Spring 2026' },
-        { id: 'CRS006', code: 'BUS101', name: 'Business Fundamentals', department: 'Business', credits: 3, semester: 'Fall 2025' },
+        { id: 'CRS001', code: 'CS301', name: 'Database Systems', department: 'Computer Science', credits: 3, semester: 'Fall 2025', days: ['Mon', 'Wed'], startTime: '10:00', endTime: '11:30', room: '301', building: 'Academic Block A' },
+        { id: 'CRS002', code: 'MATH201', name: 'Linear Algebra', department: 'Mathematics', credits: 4, semester: 'Fall 2025', days: ['Tue', 'Thu'], startTime: '08:30', endTime: '10:00', room: '202', building: 'Science Wing' },
+        { id: 'CRS003', code: 'PHY101', name: 'Physics I', department: 'Physics', credits: 4, semester: 'Fall 2025', days: ['Mon', 'Wed', 'Fri'], startTime: '11:00', endTime: '12:00', room: '105', building: 'Science Wing' },
+        { id: 'CRS004', code: 'ENG202', name: 'Technical Writing', department: 'English', credits: 3, semester: 'Spring 2026', days: ['Tue'], startTime: '14:00', endTime: '17:00', room: '404', building: 'Humanities' },
+        { id: 'CRS005', code: 'CS302', name: 'Algorithms', department: 'Computer Science', credits: 3, semester: 'Spring 2026', days: ['Mon', 'Wed'], startTime: '13:00', endTime: '14:30', room: '302', building: 'Academic Block A' },
+        { id: 'CRS006', code: 'BUS101', name: 'Business Fundamentals', department: 'Business', credits: 3, semester: 'Fall 2025', days: ['Fri'], startTime: '09:00', endTime: '12:00', room: '101', building: 'Business Center' },
     ]);
 
     const [searchTerm, setSearchTerm] = useState('');
@@ -75,8 +75,8 @@ export function ManageCourses() {
                                 <th>Course Code</th>
                                 <th>Course Name</th>
                                 <th>Department</th>
-                                <th>Credits</th>
-                                <th>Semester</th>
+                                <th>Schedule</th>
+                                <th>Location</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -86,8 +86,14 @@ export function ManageCourses() {
                                     <td className="font-medium">{course.code}</td>
                                     <td>{course.name}</td>
                                     <td className="text-muted">{course.department}</td>
-                                    <td>{course.credits}</td>
-                                    <td className="text-muted">{course.semester}</td>
+                                    <td className="text-sm">
+                                        <div className="text-gray-900 font-medium">{course.days ? course.days.join(', ') : 'N/A'}</div>
+                                        <div className="text-gray-500">{course.startTime} - {course.endTime}</div>
+                                    </td>
+                                    <td className="text-sm text-muted">
+                                        <div>{course.building}</div>
+                                        <div>Room: {course.room}</div>
+                                    </td>
                                     <td>
                                         <div className="flex gap-2">
                                             <button
@@ -176,7 +182,22 @@ function CourseModal({ course, onClose, onSave }) {
         department: '',
         credits: 3,
         semester: '',
+        days: [],
+        startTime: '',
+        endTime: '',
+        room: '',
+        building: ''
     });
+
+    const possibleDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+    const handleDayToggle = (day) => {
+        if (formData.days.includes(day)) {
+            setFormData({ ...formData, days: formData.days.filter(d => d !== day) });
+        } else {
+            setFormData({ ...formData, days: [...formData.days, day] });
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -185,7 +206,7 @@ function CourseModal({ course, onClose, onSave }) {
 
     return (
         <div className="modal-overlay">
-            <div className="modal-content">
+            <div className="modal-content" style={{ maxHeight: '90vh', overflowY: 'auto' }}>
                 <div className="modal-header">
                     <h3 className="text-lg font-bold">{course ? 'Edit Course' : 'Add New Course'}</h3>
                     <button onClick={onClose} className="close-btn">
@@ -194,16 +215,31 @@ function CourseModal({ course, onClose, onSave }) {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="form-group">
-                        <label>Course Code</label>
-                        <input
-                            type="text"
-                            value={formData.code}
-                            onChange={(e) => setFormData({ ...formData, code: e.target.value })}
-                            className="input-field"
-                            placeholder="e.g., CS301"
-                            required
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="form-group">
+                            <label>Course Code</label>
+                            <input
+                                type="text"
+                                value={formData.code}
+                                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                                className="input-field"
+                                placeholder="e.g., CS301"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Credits</label>
+                            <input
+                                type="number"
+                                value={formData.credits}
+                                onChange={(e) => setFormData({ ...formData, credits: parseInt(e.target.value) })}
+                                className="input-field"
+                                min="1"
+                                max="6"
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="form-group">
@@ -217,43 +253,100 @@ function CourseModal({ course, onClose, onSave }) {
                         />
                     </div>
 
-                    <div className="form-group">
-                        <label>Department</label>
-                        <input
-                            type="text"
-                            value={formData.department}
-                            onChange={(e) => setFormData({ ...formData, department: e.target.value })}
-                            className="input-field"
-                            required
-                        />
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="form-group">
+                            <label>Department</label>
+                            <input
+                                type="text"
+                                value={formData.department}
+                                onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                                className="input-field"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label>Semester</label>
+                            <input
+                                type="text"
+                                value={formData.semester}
+                                onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
+                                className="input-field"
+                                placeholder="e.g., Fall 2025"
+                                required
+                            />
+                        </div>
                     </div>
 
-                    <div className="form-group">
-                        <label>Credits</label>
-                        <input
-                            type="number"
-                            value={formData.credits}
-                            onChange={(e) => setFormData({ ...formData, credits: parseInt(e.target.value) })}
-                            className="input-field"
-                            min="1"
-                            max="6"
-                            required
-                        />
+                    {/* Schedule Section */}
+                    <div className="border-t pt-4 mt-4">
+                        <h4 className="font-bold mb-3 text-gray-700">Class Schedule & Location</h4>
+
+                        <div className="form-group mb-4">
+                            <label className="mb-2 block">Class Days</label>
+                            <div className="flex flex-wrap gap-2">
+                                {possibleDays.map(day => (
+                                    <button
+                                        key={day}
+                                        type="button"
+                                        onClick={() => handleDayToggle(day)}
+                                        className={`px-3 py-1 text-sm rounded-full border transition-colors ${formData.days.includes(day)
+                                                ? 'bg-purple-600 text-white border-purple-600'
+                                                : 'bg-white text-gray-600 border-gray-300 hover:border-purple-400'
+                                            }`}
+                                    >
+                                        {day}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <div className="form-group">
+                                <label>Start Time</label>
+                                <input
+                                    type="time"
+                                    value={formData.startTime}
+                                    onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                                    className="input-field"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>End Time</label>
+                                <input
+                                    type="time"
+                                    value={formData.endTime}
+                                    onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                                    className="input-field"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="form-group">
+                                <label>Room Number</label>
+                                <input
+                                    type="text"
+                                    value={formData.room}
+                                    onChange={(e) => setFormData({ ...formData, room: e.target.value })}
+                                    className="input-field"
+                                    placeholder="e.g., 301"
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Building Name</label>
+                                <input
+                                    type="text"
+                                    value={formData.building}
+                                    onChange={(e) => setFormData({ ...formData, building: e.target.value })}
+                                    className="input-field"
+                                    placeholder="e.g., Academic Block A"
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="form-group">
-                        <label>Semester</label>
-                        <input
-                            type="text"
-                            value={formData.semester}
-                            onChange={(e) => setFormData({ ...formData, semester: e.target.value })}
-                            className="input-field"
-                            placeholder="e.g., Fall 2025"
-                            required
-                        />
-                    </div>
-
-                    <div className="modal-actions">
+                    <div className="modal-actions pt-4">
                         <button type="button" onClick={onClose} className="btn-outline flex-1">
                             Cancel
                         </button>

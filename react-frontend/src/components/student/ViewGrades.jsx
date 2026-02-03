@@ -1,4 +1,5 @@
 import React from 'react';
+import { Download } from 'lucide-react';
 import '../../styles/StudentDashboard.css';
 
 export function ViewGrades() {
@@ -28,11 +29,26 @@ export function ViewGrades() {
         return 'badge grade-D'; // Includes F for simplicity in styling
     };
 
+    const handleExport = () => {
+        // Mock PDF generation - in a real app this would call a backend endpoint or use a library like jsPDF
+        alert("Generating Transcript PDF... \n(This is a frontend mock)");
+    };
+
     return (
         <div>
-            <div style={{ marginBottom: '24px' }}>
-                <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-gray-900)' }}>View Grades</h2>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-gray-600)' }}>Your academic performance summary</p>
+            <div style={{ marginBottom: '24px' }} className="flex justify-between items-center">
+                <div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: 'var(--text-gray-900)' }}>View Grades</h2>
+                    <p style={{ fontSize: '0.875rem', color: 'var(--text-gray-600)' }}>Your academic performance summary</p>
+                </div>
+                <button
+                    onClick={handleExport}
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm"
+                    style={{ fontSize: '0.9rem' }}
+                >
+                    <Download size={18} />
+                    Export Transcript
+                </button>
             </div>
 
             {/* GPA Card */}

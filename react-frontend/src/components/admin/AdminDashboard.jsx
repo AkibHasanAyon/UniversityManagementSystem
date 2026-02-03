@@ -5,6 +5,8 @@ import { ManageFaculty } from './ManageFaculty';
 import { ManageCourses } from './ManageCourses';
 import { AssignCourses } from './AssignCourses';
 import { ViewRecords } from './ViewRecords';
+import { StudentEnrollment } from './StudentEnrollment';
+
 import '../../styles/Dashboard.css';
 
 // Placeholder removed
@@ -20,7 +22,9 @@ export function AdminDashboard({ user, onLogout }) {
         { id: 'faculty', label: 'Manage Faculty', icon: Users },
         { id: 'courses', label: 'Manage Courses', icon: BookOpen },
         { id: 'assign', label: 'Assign Courses', icon: GraduationCap },
+        { id: 'enrollment', label: 'Student Enrollment', icon: Users },
         { id: 'records', label: 'Academic Records', icon: BookOpen },
+
     ];
 
     // Render content based on selected view
@@ -31,7 +35,9 @@ export function AdminDashboard({ user, onLogout }) {
             case 'faculty': return <ManageFaculty />;
             case 'courses': return <ManageCourses />;
             case 'assign': return <AssignCourses />;
+            case 'enrollment': return <StudentEnrollment />;
             case 'records': return <ViewRecords />;
+
             default: return <OverviewCards />;
         }
     };
