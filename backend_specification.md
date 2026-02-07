@@ -52,8 +52,11 @@ This document outlines the backend requirements for the University Management Sy
 *   `credits` (Integer)
 *   `semester` (String)
 *   `description` (Text)
-*   `schedule_time` (String)
-*   `location` (String)
+*   `days` (JSON/Array, e.g., ["Mon", "Wed"])
+*   `start_time` (String, Time format e.g., "10:00")
+*   `end_time` (String, Time format e.g., "11:30")
+*   `room` (String)
+*   `building` (String)
 
 **Table: `faculty_assignments`** (Linking Faculty to Courses)
 *   `id` (PK)
@@ -124,6 +127,9 @@ This document outlines the backend requirements for the University Management Sy
 *   `GET /api/courses` - List courses.
 *   `POST /api/courses` - Create course.
 *   `POST /api/assignments` - Assign faculty to course.
+*   `GET /api/enrollments` - List all student enrollments.
+*   `POST /api/enrollments` - Enroll a student in a course (Admin override).
+*   `DELETE /api/enrollments/:id` - Drop a student enrollment.
 *   `GET /api/records` - Full academic records (all grades).
 
 ### Faculty
@@ -133,7 +139,9 @@ This document outlines the backend requirements for the University Management Sy
 
 ### Student
 *   `GET /api/student/profile` - My profile info.
-*   `GET /api/student/enrollments` - My current courses.
+*   `GET /api/student/enrollments` - My current courses (includes schedule, room, building details).
+*   `POST /api/student/enrollments` - Self-enroll in a course.
+*   `DELETE /api/student/enrollments/:id` - Drop a course.
 *   `GET /api/student/grades` - My grades for current semester.
 *   `GET /api/student/history` - Historical academic record (transcript).
 
