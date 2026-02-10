@@ -33,6 +33,9 @@ Handles authentication and user profiles.
         *   `user` (OneToOneField -> User)
         *   `student_id` (CharField, unique, e.g., 'STU-2024-001')
         *   `department` (ForeignKey -> university.Department)
+        *   `major` (CharField, optional, can alias Department)
+        *   `year` (Choice: '1st', '2nd', '3rd', '4th')
+        *   `current_gpa` (DecimalField, cached)
         *   `date_of_birth` (DateField)
         *   `blood_group` (CharField, optional)
     *   *Methods*:
@@ -45,6 +48,7 @@ Handles authentication and user profiles.
         *   `faculty_id` (CharField, unique, e.g., 'FAC-001')
         *   `department` (ForeignKey -> university.Department)
         *   `designation` (CharField, e.g., 'Professor', 'Lecturer')
+        *   `specialization` (CharField)
         *   `joining_date` (DateField)
 
 ### B. App: `university`
@@ -117,15 +121,19 @@ Handles courses, enrollments, and grading.
 4.  **Create Users**: Admin registers Faculty and Students, assigning them to Departments.
 
 ### 4.3. Class Scheduling (Admin)
+*Note: The Frontend "Manage Courses" view combines Course metadata and Scheduling details.*
 1.  **Create Course**: Admin defines "CS101 - Intro to CS".
+    *   *API*: `POST /api/academic/courses/`
 2.  **Create Schedule**: Admin offers CS101 in Spring 2024.
+    *   *API*: `POST /api/academic/schedules/`
     *   Selects **Faculty** (Time conflict check performed).
     *   Selects **Classroom** (Availability check performed).
     *   Sets **Days** ("Mon, Wed") and **Times** ("10:00 - 11:30").
 
 ### 4.4. Student Enrollment
-1.  **View Offerings**: Student requests `/api/academic/schedule/?semester=current`.
-2.  **Enroll**: Student POSTs to `/api/academic/enroll/` with `schedule_id`.
+1.  **View Offerings**: Student requests `/api/academic/schedules/?semester=current`.
+2.  **Enroll**: Student POSTs to `/api/academic/enrollments/`.
+    *   Payload: `{ "student_id": "STU001", "schedule_id": 45 }`
     *   *Backend Check*: Is student already enrolled? Are generic seats available (optional logic)?
 3.  **View Status**: enrollment status is `Enrolled`.
 
@@ -151,9 +159,9 @@ Handles courses, enrollments, and grading.
 | `GET` | `/api/users/users/` | List all users (Admin only) | - |
 | `POST` | `/api/users/users/` | Create User (Admin only) | `{email, password, role, ...}` |
 | `GET` | `/api/users/students/` | List Students | Filters: `?department=`, `?id=` |
-| `POST` | `/api/users/students/` | Create Student Profile | `{user_id, student_id, dept_id, ...}` |
+| `POST` | `/api/users/students/` | Create Student Profile | `{user_id, student_id, dept_id, major, year, ...}` |
 | `GET` | `/api/users/faculty/` | List Faculty | Filters: `?department=` |
-| `POST` | `/api/users/faculty/` | Create Faculty Profile | `{user_id, faculty_id, dept_id, ...}` |
+| `POST` | `/api/users/faculty/` | Create Faculty Profile | `{user_id, faculty_id, dept_id, specialization, ...}` |
 
 ### University Structure
 | Method | Endpoint | Description | Payload |
