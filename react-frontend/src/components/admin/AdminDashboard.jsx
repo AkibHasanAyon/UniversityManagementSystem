@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, GraduationCap, LogOut, Menu, X } from 'lucide-react';
+import { dashboardApi } from '../../api/dashboardApi';
 import { ManageStudents } from './ManageStudents';
 import { ManageFaculty } from './ManageFaculty';
 import { ManageCourses } from './ManageCourses';
@@ -112,10 +113,32 @@ export function AdminDashboard({ user, onLogout }) {
 
 // Overview Component
 function OverviewCards() {
+    const [statData, setStatData] = useState({
+        students: '...',
+        faculty: '...',
+        courses: '...'
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await dashboardApi.getAdminStats();
+                setStatData({
+                    students: data.total_students ?? data.students ?? 0,
+                    faculty: data.total_faculty ?? data.faculty ?? 0,
+                    courses: data.total_courses ?? data.courses ?? 0
+                });
+            } catch (err) {
+                console.error("Failed to load admin stats", err);
+            }
+        };
+        fetchStats();
+    }, []);
+
     const stats = [
-        { label: 'Total Students', value: '2,847', icon: Users, colorClass: 'blue' },
-        { label: 'Total Faculty', value: '186', icon: Users, colorClass: 'green' },
-        { label: 'Total Courses', value: '342', icon: BookOpen, colorClass: 'purple' },
+        { label: 'Total Students', value: statData.students, icon: Users, colorClass: 'blue' },
+        { label: 'Total Faculty', value: statData.faculty, icon: Users, colorClass: 'green' },
+        { label: 'Total Courses', value: statData.courses, icon: BookOpen, colorClass: 'purple' },
     ];
 
     return (

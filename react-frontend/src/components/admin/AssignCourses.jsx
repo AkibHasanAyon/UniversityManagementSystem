@@ -1,57 +1,79 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import { usersApi } from '../../api/usersApi';
+import { academicApi } from '../../api/academicApi';
 import '../../styles/Dashboard.css';
 
 export function AssignCourses() {
-    const [assignments, setAssignments] = useState([
-        { facultyId: 'FAC001', facultyName: 'Prof. Rahman', courseId: 'CRS001', courseCode: 'CS301', courseName: 'Database Systems' },
-        { facultyId: 'FAC001', facultyName: 'Prof. Rahman', courseId: 'CRS005', courseCode: 'CS302', courseName: 'Algorithms' },
-        { facultyId: 'FAC002', facultyName: 'Dr. Farhana', courseId: 'CRS002', courseCode: 'MATH201', courseName: 'Linear Algebra' },
-        { facultyId: 'FAC003', facultyName: 'Prof. Jamal Uddin', courseId: 'CRS003', courseCode: 'PHY101', courseName: 'Physics I' },
-    ]);
+    const [facultyList, setFacultyList] = useState([]);
+    const [courseList, setCourseList] = useState([]);
+    const [assignments, setAssignments] = useState([]);
 
     const [selectedFaculty, setSelectedFaculty] = useState('');
     const [selectedCourse, setSelectedCourse] = useState('');
+
+    const [loading, setLoading] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [error, setError] = useState('');
 
-    const faculty = [
-        { id: 'FAC001', name: 'Prof. Rahman' },
-        { id: 'FAC002', name: 'Dr. Farhana' },
-        { id: 'FAC003', name: 'Prof. Jamal Uddin' },
-        { id: 'FAC004', name: 'Dr. Nusrat Jahan' },
-        { id: 'FAC005', name: 'Prof. Rafiqul Islam' },
-    ];
+    useEffect(() => {
+        fetchData();
+    }, []);
 
-    const courses = [
-        { id: 'CRS001', code: 'CS301', name: 'Database Systems' },
-        { id: 'CRS002', code: 'MATH201', name: 'Linear Algebra' },
-        { id: 'CRS003', code: 'PHY101', name: 'Physics I' },
-        { id: 'CRS004', code: 'ENG202', name: 'Technical Writing' },
-        { id: 'CRS005', code: 'CS302', name: 'Algorithms' },
-        { id: 'CRS006', code: 'BUS101', name: 'Business Fundamentals' },
-    ];
+    const fetchData = async () => {
+        try {
+            const [facRes, corRes] = await Promise.all([
+                usersApi.listFaculty('', 1, 100), // Get a large list or all
+                academicApi.listCourses()
+            ]);
 
-    const handleAssign = (e) => {
-        e.preventDefault();
+            const fetchedFaculty = facRes.results || facRes || [];
+            const fetchedCourses = corRes.results || corRes || [];
 
-        const facultyData = faculty.find(f => f.id === selectedFaculty);
-        const courseData = courses.find(c => c.id === selectedCourse);
+            setFacultyList(fetchedFaculty);
+            setCourseList(fetchedCourses);
 
-        if (facultyData && courseData) {
-            const newAssignment = {
-                facultyId: facultyData.id,
-                facultyName: facultyData.name,
-                courseId: courseData.id,
-                courseCode: courseData.code,
-                courseName: courseData.name,
-            };
+            // Extract existing assignments from courses if backend returns faculty inline
+            const existingAssignments = fetchedCourses
+                .filter(c => c.faculty)
+                .map(c => ({
+                    facultyId: c.faculty?.id || c.faculty,
+                    facultyName: c.faculty?.first_name ? `${c.faculty.first_name} ${c.faculty.last_name}` : `Faculty ID: ${c.faculty?.id || c.faculty}`,
+                    courseId: c.id,
+                    courseCode: c.code,
+                    courseName: c.name
+                }));
 
-            setAssignments([...assignments, newAssignment]);
-            setSelectedFaculty('');
-            setSelectedCourse('');
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 3000);
+            setAssignments(existingAssignments);
+        } catch (err) {
+            console.error("Failed to load assignment data", err);
+            setError("Failed to load data. Please refresh.");
         }
+    };
+
+    const handleAssign = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+
+        try {
+            await academicApi.assignFaculty(selectedCourse, selectedFaculty);
+
+            setshowSuccessAndReset();
+            fetchData(); // Refresh list
+        } catch (err) {
+            console.error("Assignment failed", err);
+            setError(err.response?.data?.detail || "Failed to assign course.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const setshowSuccessAndReset = () => {
+        setSelectedFaculty('');
+        setSelectedCourse('');
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
     };
 
     return (
@@ -61,11 +83,17 @@ export function AssignCourses() {
                 <p className="text-gray-600 font-sm">Link faculty members with their teaching courses</p>
             </div>
 
-            {/* Success Message */}
+            {/* Success/Error Messages */}
             {showSuccess && (
-                <div className="alert-success mb-6">
+                <div className="alert-success mb-6" style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Course assigned successfully!</span>
+                </div>
+            )}
+
+            {error && (
+                <div className="alert-error mb-6" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '0.5rem' }}>
+                    <span className="font-medium">{error}</span>
                 </div>
             )}
 
@@ -84,8 +112,8 @@ export function AssignCourses() {
                             required
                         >
                             <option value="">Choose a faculty member...</option>
-                            {faculty.map(f => (
-                                <option key={f.id} value={f.id}>{f.name} ({f.id})</option>
+                            {facultyList.map(f => (
+                                <option key={f.id} value={f.id}>{f.first_name} {f.last_name} ({f.email})</option>
                             ))}
                         </select>
                     </div>
@@ -101,7 +129,7 @@ export function AssignCourses() {
                             required
                         >
                             <option value="">Choose a course...</option>
-                            {courses.map(c => (
+                            {courseList.map(c => (
                                 <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
                             ))}
                         </select>
@@ -110,8 +138,9 @@ export function AssignCourses() {
                     <button
                         type="submit"
                         className="btn-primary w-full py-3"
+                        disabled={loading}
                     >
-                        Assign Course
+                        {loading ? 'Assigning...' : 'Assign Course'}
                     </button>
                 </form>
             </div>
@@ -125,21 +154,23 @@ export function AssignCourses() {
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th>Faculty ID</th>
                                 <th>Faculty Name</th>
                                 <th>Course Code</th>
                                 <th>Course Name</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {assignments.map((assignment, index) => (
+                            {assignments.length > 0 ? assignments.map((assignment, index) => (
                                 <tr key={index}>
-                                    <td className="font-medium">{assignment.facultyId}</td>
-                                    <td>{assignment.facultyName}</td>
+                                    <td className="font-medium">{assignment.facultyName}</td>
                                     <td className="font-medium">{assignment.courseCode}</td>
                                     <td className="text-muted">{assignment.courseName}</td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan="3" className="text-center py-4 text-gray-500">No current assignments found.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>

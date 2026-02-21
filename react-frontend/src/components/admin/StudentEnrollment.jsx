@@ -1,76 +1,88 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Search } from 'lucide-react';
+import { usersApi } from '../../api/usersApi';
+import { academicApi } from '../../api/academicApi';
 import '../../styles/Dashboard.css';
 
 export function StudentEnrollment() {
-    // Mock Data
-    const [enrollments, setEnrollments] = useState([
-        { id: 1, studentName: 'Ayesha Siddiqua', studentId: 'STU001', courseCode: 'CS301', courseName: 'Database Systems', semester: 'Fall 2025', instructor: 'Prof. Rahman' },
-        { id: 2, studentName: 'Rahim Ahmed', studentId: 'STU002', courseCode: 'MATH201', courseName: 'Linear Algebra', semester: 'Fall 2025', instructor: 'Dr. Farhana' },
-    ]);
-
-    const [students] = useState([
-        { id: 'STU001', name: 'Ayesha Siddiqua' },
-        { id: 'STU002', name: 'Rahim Ahmed' },
-        { id: 'STU003', name: 'Sadia Islam' },
-        { id: 'STU004', name: 'Karim Uddin' },
-        { id: 'STU005', name: 'Fatema Begum' },
-    ]);
-
-    const [courses] = useState([
-        { code: 'CS301', name: 'Database Systems', instructor: 'Prof. Rahman', semester: 'Fall 2025' },
-        { code: 'MATH201', name: 'Linear Algebra', instructor: 'Dr. Farhana', semester: 'Fall 2025' },
-        { code: 'PHY101', name: 'Physics I', instructor: 'Prof. Jamal Uddin', semester: 'Fall 2025' },
-    ]);
+    const [enrollments, setEnrollments] = useState([]);
+    const [students, setStudents] = useState([]);
+    const [courses, setCourses] = useState([]);
 
     const [selectedStudent, setSelectedStudent] = useState('');
     const [selectedCourse, setSelectedCourse] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
 
-    const handleEnroll = (e) => {
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    const fetchData = async () => {
+        try {
+            const [stuRes, corRes, enrRes] = await Promise.all([
+                usersApi.listStudents('', 1, 500), // Get all active students for dropdown
+                academicApi.listCourses(),
+                academicApi.listEnrollments()
+            ]);
+
+            setStudents(stuRes.results || stuRes || []);
+            setCourses(corRes.results || corRes || []);
+            setEnrollments(enrRes.results || enrRes || []);
+        } catch (err) {
+            console.error("Failed to load enrollment data", err);
+            setError("Failed to load initial data. Please try again.");
+        }
+    };
+
+    const handleEnroll = async (e) => {
         e.preventDefault();
         if (!selectedStudent || !selectedCourse) return;
 
-        const student = students.find(s => s.id === selectedStudent);
-        const course = courses.find(c => c.code === selectedCourse);
+        setLoading(true);
+        setError('');
 
-        // Check for duplicate enrollment
-        const isEnrolled = enrollments.some(
-            enroll => enroll.studentId === student.id && enroll.courseCode === course.code
-        );
+        try {
+            await academicApi.enrollStudent(selectedCourse, selectedStudent);
 
-        if (isEnrolled) {
-            alert('Student is already enrolled in this course.');
-            return;
+            // Reset selection and refresh enrollments
+            setSelectedStudent('');
+            setSelectedCourse('');
+            fetchData();
+        } catch (err) {
+            console.error("Failed to enroll student", err);
+            setError(err.response?.data?.detail || "Failed to enroll student. They might already be enrolled.");
+        } finally {
+            setLoading(false);
         }
-
-        const newEnrollment = {
-            id: Date.now(),
-            studentName: student.name,
-            studentId: student.id,
-            courseCode: course.code,
-            courseName: course.name,
-            semester: course.semester,
-            instructor: course.instructor
-        };
-
-        setEnrollments([...enrollments, newEnrollment]);
-        // Reset selection
-        setSelectedStudent('');
-        setSelectedCourse('');
     };
 
-    const handleRemove = (id) => {
+    const handleRemove = async (id) => {
         if (window.confirm('Are you sure you want to remove this enrollment?')) {
-            setEnrollments(enrollments.filter(e => e.id !== id));
+            try {
+                await academicApi.dropCourse(id);
+                fetchData();
+            } catch (err) {
+                console.error("Failed to remove enrollment", err);
+                alert("Failed to drop course. Please try again.");
+            }
         }
     };
 
-    const filteredEnrollments = enrollments.filter(enroll =>
-        enroll.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        enroll.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        enroll.courseCode.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredEnrollments = enrollments.filter(enroll => {
+        const studentStr = typeof enroll.student === 'object'
+            ? `${enroll.student?.first_name} ${enroll.student?.last_name} ${enroll.student?.email}`
+            : String(enroll.student);
+
+        const courseStr = typeof enroll.course === 'object'
+            ? `${enroll.course?.code} ${enroll.course?.name}`
+            : String(enroll.course);
+
+        const searchLower = searchTerm.toLowerCase();
+        return studentStr.toLowerCase().includes(searchLower) || courseStr.toLowerCase().includes(searchLower);
+    });
 
     return (
         <div>
@@ -78,6 +90,12 @@ export function StudentEnrollment() {
                 <h2 className="text-xl font-bold">Student Enrollment</h2>
                 <p className="text-gray-600 font-sm">Assign students to courses</p>
             </div>
+
+            {error && (
+                <div className="alert-error mb-6" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '0.5rem' }}>
+                    <span className="font-medium">{error}</span>
+                </div>
+            )}
 
             {/* Enrollment Form */}
             <div className="card mb-6 p-6">
@@ -93,7 +111,7 @@ export function StudentEnrollment() {
                         >
                             <option value="">-- Select Student --</option>
                             {students.map(s => (
-                                <option key={s.id} value={s.id}>{s.name} ({s.id})</option>
+                                <option key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.email})</option>
                             ))}
                         </select>
                     </div>
@@ -108,7 +126,7 @@ export function StudentEnrollment() {
                         >
                             <option value="">-- Select Course --</option>
                             {courses.map(c => (
-                                <option key={c.code} value={c.code}>{c.name} ({c.code})</option>
+                                <option key={c.id} value={c.id}>{c.code} - {c.name}</option>
                             ))}
                         </select>
                     </div>
@@ -116,10 +134,10 @@ export function StudentEnrollment() {
                     <button
                         type="submit"
                         className="btn-primary flex justify-center items-center gap-2 h-10"
-                        disabled={!selectedStudent || !selectedCourse}
+                        disabled={!selectedStudent || !selectedCourse || loading}
                     >
                         <Plus size={18} />
-                        Enroll Student
+                        {loading ? 'Enrolling...' : 'Enroll Student'}
                     </button>
                 </form>
             </div>
@@ -144,39 +162,43 @@ export function StudentEnrollment() {
                     <table className="data-table w-full">
                         <thead>
                             <tr>
-                                <th className="text-left">Student Name</th>
-                                <th className="text-left">Student ID</th>
-                                <th className="text-left">Course Code</th>
-                                <th className="text-left">Course Name</th>
-                                <th className="text-left">Semester</th>
-                                <th className="text-left">Instructor</th>
+                                <th className="text-left">Student Information</th>
+                                <th className="text-left">Course Information</th>
+                                <th className="text-left">Status</th>
                                 <th className="text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filteredEnrollments.length > 0 ? (
-                                filteredEnrollments.map((enroll) => (
-                                    <tr key={enroll.id}>
-                                        <td className="font-medium">{enroll.studentName}</td>
-                                        <td className="text-gray-600">{enroll.studentId}</td>
-                                        <td className="font-medium">{enroll.courseCode}</td>
-                                        <td>{enroll.courseName}</td>
-                                        <td className="text-gray-600">{enroll.semester}</td>
-                                        <td>{enroll.instructor}</td>
-                                        <td className="text-center">
-                                            <button
-                                                onClick={() => handleRemove(enroll.id)}
-                                                className="text-red-500 hover:text-red-700 transition-colors p-1"
-                                                title="Remove Enrollment"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
+                                filteredEnrollments.map((enroll) => {
+                                    const studentName = typeof enroll.student === 'object'
+                                        ? `${enroll.student?.first_name} ${enroll.student?.last_name}`
+                                        : `Student ID: ${enroll.student}`;
+
+                                    const courseName = typeof enroll.course === 'object'
+                                        ? `${enroll.course?.code} - ${enroll.course?.name}`
+                                        : `Course ID: ${enroll.course}`;
+
+                                    return (
+                                        <tr key={enroll.id}>
+                                            <td className="font-medium">{studentName}</td>
+                                            <td className="font-medium">{courseName}</td>
+                                            <td className="text-gray-600">{enroll.status || 'Active'}</td>
+                                            <td className="text-center">
+                                                <button
+                                                    onClick={() => handleRemove(enroll.id)}
+                                                    className="text-red-500 hover:text-red-700 transition-colors p-1"
+                                                    title="Remove Enrollment"
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })
                             ) : (
                                 <tr>
-                                    <td colSpan="7" className="text-center py-4 text-gray-500">
+                                    <td colSpan="4" className="text-center py-4 text-gray-500">
                                         No enrollments found.
                                     </td>
                                 </tr>

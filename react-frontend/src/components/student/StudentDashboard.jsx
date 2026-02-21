@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Award, LogOut, Menu, X, GraduationCap, FileText } from 'lucide-react';
+import { dashboardApi } from '../../api/dashboardApi';
 import { ViewEnrollment } from './ViewEnrollment';
 import { ViewGrades } from './ViewGrades';
 import { AcademicHistory } from './AcademicHistory';
@@ -98,17 +99,37 @@ export function StudentDashboard({ user, onLogout }) {
 }
 
 function OverviewCards() {
+    const [statData, setStatData] = useState({
+        enrolled_courses: '...',
+        gpa: '...',
+        upcoming_classes: [],
+        current_courses: []
+    });
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await dashboardApi.getStudentStats();
+                setStatData({
+                    enrolled_courses: data.enrolled_courses ?? data.total_courses ?? 0,
+                    gpa: data.current_gpa ?? data.gpa ?? 'N/A',
+                    upcoming_classes: data.upcoming_classes || [],
+                    current_courses: data.current_courses || data.enrolled_courses_list || []
+                });
+            } catch (err) {
+                console.error("Failed to fetch student stats", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
     const stats = [
-        { label: 'Enrolled Courses', value: '5', icon: BookOpen, color: '#a855f7' },
-        { label: 'Current GPA', value: '3.72', icon: Award, color: '#3b82f6' },
+        { label: 'Enrolled Courses', value: statData.enrolled_courses, icon: BookOpen, color: '#a855f7' },
+        { label: 'Current GPA', value: statData.gpa, icon: Award, color: '#3b82f6' },
     ];
-
-    const mockClasses = [
-        { courseCode: 'CS301', courseName: 'Database Systems', startTime: '10:00', endTime: '11:30', days: ['Mon', 'Wed'], room: '301', building: 'Academic Block A', instructor: 'Prof. Rahman', status: 'Scheduled' },
-        { courseCode: 'MATH201', courseName: 'Linear Algebra', startTime: '08:30', endTime: '10:00', days: ['Tue', 'Thu'], room: '202', building: 'Science Wing', instructor: 'Dr. Farhana', status: 'Scheduled' },
-        { courseCode: 'CS302', courseName: 'Algorithms', startTime: '13:00', endTime: '14:30', days: ['Mon', 'Wed'], room: '302', building: 'Academic Block A', instructor: 'Prof. Rahman', status: 'Rescheduled' },
-    ];
-
 
     return (
         <div className="overview-container">
@@ -131,23 +152,35 @@ function OverviewCards() {
                 })}
             </div>
 
-            <ClassScheduleWidget userRole="student" classes={mockClasses} />
+            {loading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Loading summary...</div>
+            ) : (
+                <>
+                    <ClassScheduleWidget userRole="student" classes={statData.upcoming_classes} />
 
-            <div className="summary-box" style={{ background: 'white', marginTop: '32px' }}>
-
-                <h3 className="summary-title" style={{ color: 'var(--text-gray-900)', fontSize: '1.125rem', marginBottom: '16px' }}>Current Semester Courses</h3>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {['CS301 - Database Systems', 'MATH201 - Linear Algebra', 'PHY101 - Physics I', 'ENG202 - Technical Writing', 'CS302 - Algorithms'].map((course, idx) => (
-                        <div key={idx} className="course-item">
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <div className="progress-dot"></div>
-                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-gray-900)' }}>{course}</span>
+                    <div className="summary-box" style={{ background: 'white', marginTop: '32px' }}>
+                        <h3 className="summary-title" style={{ color: 'var(--text-gray-900)', fontSize: '1.125rem', marginBottom: '16px' }}>Current Semester Courses</h3>
+                        {statData.current_courses && statData.current_courses.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                {statData.current_courses.map((course, idx) => {
+                                    const courseName = typeof course === 'object' ? `${course.code} - ${course.name}` : course;
+                                    return (
+                                        <div key={idx} className="course-item">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <div className="progress-dot" style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--emerald-500)' }}></div>
+                                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-gray-900)' }}>{courseName}</span>
+                                            </div>
+                                            <span className="in-progress-badge" style={{ fontSize: '0.75rem', background: '#e0f2fe', color: '#0369a1', padding: '2px 8px', borderRadius: '12px' }}>In Progress</span>
+                                        </div>
+                                    );
+                                })}
                             </div>
-                            <span className="in-progress-badge">In Progress</span>
-                        </div>
-                    ))}
-                </div>
-            </div>
+                        ) : (
+                            <p style={{ color: '#6b7280', fontSize: '0.875rem' }}>No current courses available.</p>
+                        )}
+                    </div>
+                </>
+            )}
         </div>
     );
 }

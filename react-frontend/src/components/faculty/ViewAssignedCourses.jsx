@@ -1,16 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Clock, MapPin, Calendar, Book } from 'lucide-react';
+import { academicApi } from '../../api/academicApi';
 import '../../styles/Dashboard.css';
 
 export function ViewAssignedCourses() {
     const [selectedCourse, setSelectedCourse] = useState(null);
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
-    const courses = [
-        { code: 'CS301', name: 'Database Systems', semester: 'Fall 2025', students: 48, credits: 3, time: 'Mon, Wed 10:00 AM', room: 'Bldg A - 302', description: 'Introduction to database design, SQL, and query optimization.' },
-        { code: 'CS302', name: 'Algorithms', semester: 'Spring 2026', students: 52, credits: 3, time: 'Tue, Thu 02:00 PM', room: 'Bldg C - 105', description: 'Advanced algorithm analysis, graph theory, and dynamic programming.' },
-        { code: 'CS405', name: 'Software Engineering', semester: 'Fall 2025', students: 45, credits: 4, time: 'Fri 09:00 AM', room: 'Lab 2', description: 'Software life cycle, agile methodologies, and project management.' },
-        { code: 'CS201', name: 'Data Structures', semester: 'Spring 2026', students: 42, credits: 3, time: 'Mon, Wed 01:00 PM', room: 'Bldg B - 204', description: 'Fundamental data structures including stacks, queues, trees, and graphs.' },
-    ];
+    useEffect(() => {
+        const fetchAssignedCourses = async () => {
+            try {
+                // Fetch courses for the currently logged in faculty
+                const data = await academicApi.listCourses('', 'current');
+                setCourses(data.results || data || []);
+            } catch (err) {
+                console.error("Failed to fetch assigned courses", err);
+                setError("Failed to load your assigned courses.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchAssignedCourses();
+    }, []);
 
     return (
         <div>
@@ -19,45 +33,61 @@ export function ViewAssignedCourses() {
                 <p className="text-gray-600 font-sm">View your teaching assignments</p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-                {courses.map((course, index) => (
-                    <div key={index} className="card p-6">
-                        <div className="flex-between-start mb-4">
-                            <div>
-                                <h3 className="text-lg font-bold text-gray-900">{course.code}</h3>
-                                <p className="text-sm text-gray-600">{course.name}</p>
-                            </div>
-                            <span className="badge badge-success">
-                                Active
-                            </span>
-                        </div>
+            {error && (
+                <div className="alert-error mb-6" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '0.5rem' }}>
+                    <span className="font-medium">{error}</span>
+                </div>
+            )}
 
-                        <div className="space-y-2 mb-4">
-                            <div className="flex-between-center text-sm">
-                                <span className="text-gray-600">Semester:</span>
-                                <span className="font-medium text-gray-900">{course.semester}</span>
+            {loading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Loading courses...</div>
+            ) : (
+                <div className="courses-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                    {courses.length > 0 ? courses.map((course, index) => (
+                        <div key={course.id || index} className="card p-6 border border-gray-100 hover:shadow-md transition-shadow">
+                            <div className="flex-between-start mb-4">
+                                <div>
+                                    <h3 className="text-lg font-bold text-gray-900">{course.code}</h3>
+                                    <p className="text-sm text-gray-600">{course.name}</p>
+                                </div>
+                                <span className="badge badge-success">
+                                    Active
+                                </span>
                             </div>
-                            <div className="flex-between-center text-sm">
-                                <span className="text-gray-600">Enrolled Students:</span>
-                                <span className="font-medium text-gray-900">{course.students}</span>
-                            </div>
-                            <div className="flex-between-center text-sm">
-                                <span className="text-gray-600">Credits:</span>
-                                <span className="font-medium text-gray-900">{course.credits}</span>
-                            </div>
-                        </div>
 
-                        <div className="pt-4 border-t border-gray-100">
-                            <button
-                                onClick={() => setSelectedCourse(course)}
-                                className="btn-green w-full text-sm"
-                            >
-                                View Details
-                            </button>
+                            <div className="space-y-2 mb-4">
+                                <div className="flex-between-center text-sm">
+                                    <span className="text-gray-600">Semester:</span>
+                                    <span className="font-medium text-gray-900">{course.semester || 'N/A'}</span>
+                                </div>
+                                {/* Note: enrolled students count might not be returned directly in course list, fallback to N/A if missing */}
+                                <div className="flex-between-center text-sm">
+                                    <span className="text-gray-600">Enrolled Students:</span>
+                                    <span className="font-medium text-gray-900">{course.students_count || course.enrolled_count || 'N/A'}</span>
+                                </div>
+                                <div className="flex-between-center text-sm">
+                                    <span className="text-gray-600">Credits:</span>
+                                    <span className="font-medium text-gray-900">{course.credits || 'N/A'}</span>
+                                </div>
+                            </div>
+
+                            <div className="pt-4 border-t border-gray-100">
+                                <button
+                                    onClick={() => setSelectedCourse(course)}
+                                    className="btn-primary w-full text-sm py-2 rounded-md font-medium"
+                                    style={{ backgroundColor: 'var(--faculty-primary)' }}
+                                >
+                                    View Details
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                ))}
-            </div>
+                    )) : (
+                        <div className="p-8 text-center text-gray-500 w-full col-span-full card border-dashed">
+                            You have no courses assigned to you at the moment.
+                        </div>
+                    )}
+                </div>
+            )}
 
             {selectedCourse && (
                 <CourseDetailsModal
@@ -70,6 +100,11 @@ export function ViewAssignedCourses() {
 }
 
 function CourseDetailsModal({ course, onClose }) {
+    // Helper to format days and time
+    const schedDays = Array.isArray(course.days) ? course.days.join(', ') : (course.days || 'TBA');
+    const schedTime = (course.startTime && course.endTime) ? `${course.startTime} - ${course.endTime}` : 'TBA';
+    const timeDisplay = schedDays !== 'TBA' || schedTime !== 'TBA' ? `${schedDays} | ${schedTime}` : 'TBA';
+
     return (
         <div className="modal-overlay">
             <div className="modal-content" style={{ maxWidth: '600px' }}>
@@ -90,40 +125,40 @@ function CourseDetailsModal({ course, onClose }) {
                                 <Calendar size={18} />
                                 <span className="text-sm font-medium">Semester</span>
                             </div>
-                            <p className="font-semibold text-gray-900">{course.semester}</p>
+                            <p className="font-semibold text-gray-900">{course.semester || 'N/A'}</p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-2 mb-2 text-gray-600">
                                 <Book size={18} />
                                 <span className="text-sm font-medium">Credits</span>
                             </div>
-                            <p className="font-semibold text-gray-900">{course.credits} Credits</p>
+                            <p className="font-semibold text-gray-900">{course.credits || 'N/A'} Credits</p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-2 mb-2 text-gray-600">
                                 <Clock size={18} />
                                 <span className="text-sm font-medium">Schedule</span>
                             </div>
-                            <p className="font-semibold text-gray-900">{course.time}</p>
+                            <p className="font-semibold text-gray-900">{timeDisplay}</p>
                         </div>
                         <div className="p-4 bg-gray-50 rounded-lg">
                             <div className="flex items-center gap-2 mb-2 text-gray-600">
                                 <MapPin size={18} />
                                 <span className="text-sm font-medium">Location</span>
                             </div>
-                            <p className="font-semibold text-gray-900">{course.room}</p>
+                            <p className="font-semibold text-gray-900">{course.building || 'N/A'} {course.room ? `- Room ${course.room}` : ''}</p>
                         </div>
                     </div>
 
                     <div>
                         <h4 className="font-semibold mb-2">Description</h4>
                         <p className="text-gray-600 leading-relaxed">
-                            {course.description}
+                            {course.description || 'No description provided for this course.'}
                         </p>
                     </div>
 
                     <div className="pt-4 border-t border-gray-100 flex justify-end">
-                        <button onClick={onClose} className="btn-primary">
+                        <button onClick={onClose} className="btn-primary" style={{ backgroundColor: 'var(--faculty-primary)' }}>
                             Close
                         </button>
                     </div>

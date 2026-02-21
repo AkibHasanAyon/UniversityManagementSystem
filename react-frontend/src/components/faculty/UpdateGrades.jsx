@@ -1,52 +1,91 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { CheckCircle, Search } from 'lucide-react';
+import { gradesApi } from '../../api/gradesApi';
 import '../../styles/Dashboard.css';
 
 export function UpdateGrades() {
-    const [existingGrades, setExistingGrades] = useState([
-        { studentId: 'STU001', studentName: 'Ayesha Siddiqua', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A' },
-        { studentId: 'STU002', studentName: 'Rahim Ahmed', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A' },
-        { studentId: 'STU006', studentName: 'Tanvir Hasan', courseCode: 'CS301', courseName: 'Database Systems', currentGrade: 'A-' },
-        { studentId: 'STU007', studentName: 'Salma Begum', courseCode: 'CS302', courseName: 'Algorithms', currentGrade: 'B+' },
-        { studentId: 'STU008', studentName: 'Ali Hossain', courseCode: 'CS302', courseName: 'Algorithms', currentGrade: 'A-' },
-    ]);
-
+    const [existingGrades, setExistingGrades] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [editingGrade, setEditingGrade] = useState(null);
     const [newGrade, setNewGrade] = useState('');
+
+    const [loading, setLoading] = useState(true);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [error, setError] = useState('');
 
-    const filteredGrades = existingGrades.filter(grade =>
-        grade.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        grade.studentId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        grade.courseCode.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        fetchGrades();
+    }, []);
 
-    const handleEdit = (grade) => {
-        setEditingGrade(grade);
-        setNewGrade(grade.currentGrade);
-    };
-
-    const handleUpdate = (e) => {
-        e.preventDefault();
-        if (editingGrade) {
-            setExistingGrades(existingGrades.map(g =>
-                g.studentId === editingGrade.studentId && g.courseCode === editingGrade.courseCode
-                    ? { ...g, currentGrade: newGrade }
-                    : g
-            ));
-            setEditingGrade(null);
-            setNewGrade('');
-            setShowSuccess(true);
-            setTimeout(() => setShowSuccess(false), 3000);
+    const fetchGrades = async () => {
+        try {
+            setLoading(true);
+            const data = await gradesApi.listGrades('current');
+            setExistingGrades(data.results || data || []);
+        } catch (err) {
+            console.error("Failed to load grades", err);
+            setError("Failed to load grades.");
+        } finally {
+            setLoading(false);
         }
     };
 
-    const getBadgeClass = (grade) => {
-        if (grade.startsWith('A')) return 'badge badge-success';
-        if (grade.startsWith('B')) return 'badge badge-primary';
-        if (grade.startsWith('C')) return 'badge badge-warning';
-        return 'badge badge-danger';
+    const filteredGrades = useMemo(() => {
+        return existingGrades.filter(grade => {
+            const studentStr = typeof grade.student === 'object'
+                ? `${grade.student?.first_name} ${grade.student?.last_name} ${grade.student?.email}`
+                : String(grade.student || '');
+
+            const courseStr = typeof grade.course === 'object'
+                ? `${grade.course?.code} ${grade.course?.name}`
+                : String(grade.course || '');
+
+            const searchLower = searchTerm.toLowerCase();
+            return studentStr.toLowerCase().includes(searchLower) || courseStr.toLowerCase().includes(searchLower);
+        });
+    }, [existingGrades, searchTerm]);
+
+    const handleEdit = (grade) => {
+        setEditingGrade(grade);
+        setNewGrade(grade.grade);
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        if (!editingGrade) return;
+
+        setIsUpdating(true);
+        setError('');
+
+        try {
+            await gradesApi.updateGrade(editingGrade.id, newGrade);
+
+            setExistingGrades(prevGrades => prevGrades.map(g =>
+                g.id === editingGrade.id ? { ...g, grade: newGrade } : g
+            ));
+
+            setShowSuccess(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+                setEditingGrade(null);
+                setNewGrade('');
+            }, 3000);
+        } catch (err) {
+            console.error("Failed to update grade", err);
+            setError(err.response?.data?.detail || "Failed to update grade. Please try again.");
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
+    const getBadgeClass = (gradeVal) => {
+        if (!gradeVal) return 'badge badge-secondary';
+        if (gradeVal.startsWith('A')) return 'badge badge-success';
+        if (gradeVal.startsWith('B')) return 'badge badge-primary';
+        if (gradeVal.startsWith('C')) return 'badge badge-warning';
+        if (gradeVal.startsWith('F')) return 'badge badge-danger';
+        return 'badge badge-secondary';
     };
 
     return (
@@ -56,11 +95,17 @@ export function UpdateGrades() {
                 <p className="text-gray-600 font-sm">Modify existing student grades</p>
             </div>
 
-            {/* Success Message */}
+            {/* Messages */}
             {showSuccess && (
-                <div className="alert-success mb-6">
+                <div className="alert-success mb-6" style={{ backgroundColor: '#dcfce7', color: '#16a34a', padding: '1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     <CheckCircle className="w-5 h-5" />
                     <span className="font-medium">Grade updated successfully!</span>
+                </div>
+            )}
+
+            {error && !editingGrade && (
+                <div className="alert-error mb-6" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '0.5rem' }}>
+                    <span className="font-medium">{error}</span>
                 </div>
             )}
 
@@ -70,70 +115,103 @@ export function UpdateGrades() {
                     <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Search by student name, ID, or course..."
+                        placeholder="Search by student name, email, or course..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input-field pl-10"
+                        className="input-field pl-10 w-full"
                     />
                 </div>
             </div>
 
             {/* Grades Table */}
             <div className="table-container">
-                <div className="table-wrapper">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Student ID</th>
-                                <th>Student Name</th>
-                                <th>Course</th>
-                                <th>Current Grade</th>
-                                <th>Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredGrades.map((grade, index) => (
-                                <tr key={index}>
-                                    <td className="font-medium">{grade.studentId}</td>
-                                    <td>{grade.studentName}</td>
-                                    <td className="text-muted">{grade.courseCode} - {grade.courseName}</td>
-                                    <td>
-                                        <span className={getBadgeClass(grade.currentGrade)}>
-                                            {grade.currentGrade}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <button
-                                            onClick={() => handleEdit(grade)}
-                                            className="btn-sm btn-green"
-                                        >
-                                            Edit
-                                        </button>
-                                    </td>
+                {loading ? (
+                    <div className="p-8 text-center text-gray-500">Loading grades...</div>
+                ) : (
+                    <div className="table-wrapper">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Course</th>
+                                    <th>Current Grade</th>
+                                    <th>Action</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {filteredGrades.length > 0 ? filteredGrades.map((gradeItem, index) => {
+                                    const studentName = typeof gradeItem.student === 'object'
+                                        ? `${gradeItem.student?.first_name} ${gradeItem.student?.last_name}`
+                                        : `Student ID: ${gradeItem.student}`;
+
+                                    const courseName = typeof gradeItem.course === 'object'
+                                        ? `${gradeItem.course?.code} - ${gradeItem.course?.name}`
+                                        : `Course ID: ${gradeItem.course}`;
+
+                                    return (
+                                        <tr key={gradeItem.id || index}>
+                                            <td className="font-medium">{studentName}</td>
+                                            <td className="text-muted">{courseName}</td>
+                                            <td>
+                                                <span className={getBadgeClass(gradeItem.grade)}>
+                                                    {gradeItem.grade || 'N/A'}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button
+                                                    onClick={() => handleEdit(gradeItem)}
+                                                    className="btn-sm btn-primary"
+                                                    style={{ backgroundColor: 'var(--faculty-primary)', borderColor: 'var(--faculty-primary)' }}
+                                                >
+                                                    Edit
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                }) : (
+                                    <tr>
+                                        <td colSpan="4" className="text-center p-4 text-gray-500">
+                                            No grades found.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
             {/* Edit Modal */}
             {editingGrade && (
                 <div className="modal-overlay">
-                    <div className="modal-content">
+                    <div className="modal-content text-left">
                         <div className="modal-header">
                             <h3 className="text-lg font-bold">Update Grade</h3>
                         </div>
 
+                        {error && editingGrade && (
+                            <div className="m-6 mb-0 alert-error" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '0.5rem' }}>
+                                <span className="font-medium">{error}</span>
+                            </div>
+                        )}
+
                         <form onSubmit={handleUpdate} className="p-6 space-y-4">
                             <div className="form-group">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Student</label>
-                                <p className="text-gray-900">{editingGrade.studentName} ({editingGrade.studentId})</p>
+                                <p className="text-gray-900 border border-gray-200 p-2 rounded bg-gray-50">
+                                    {typeof editingGrade.student === 'object'
+                                        ? `${editingGrade.student?.first_name} ${editingGrade.student?.last_name}`
+                                        : `Student ID: ${editingGrade.student}`}
+                                </p>
                             </div>
 
                             <div className="form-group">
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Course</label>
-                                <p className="text-gray-900">{editingGrade.courseCode} - {editingGrade.courseName}</p>
+                                <p className="text-gray-900 border border-gray-200 p-2 rounded bg-gray-50">
+                                    {typeof editingGrade.course === 'object'
+                                        ? `${editingGrade.course?.code} - ${editingGrade.course?.name}`
+                                        : `Course ID: ${editingGrade.course}`}
+                                </p>
                             </div>
 
                             <div className="form-group">
@@ -145,6 +223,7 @@ export function UpdateGrades() {
                                     onChange={(e) => setNewGrade(e.target.value)}
                                     className="input-field"
                                     required
+                                    disabled={isUpdating}
                                 >
                                     <option value="">Select Grade</option>
                                     <option value="A">A</option>
@@ -160,22 +239,26 @@ export function UpdateGrades() {
                                 </select>
                             </div>
 
-                            <div className="modal-actions">
+                            <div className="modal-actions pt-4">
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setEditingGrade(null);
                                         setNewGrade('');
+                                        setError('');
                                     }}
                                     className="btn-outline flex-1"
+                                    disabled={isUpdating}
                                 >
                                     Cancel
                                 </button>
                                 <button
                                     type="submit"
-                                    className="btn-green flex-1"
+                                    className="btn-primary flex-1"
+                                    style={{ backgroundColor: 'var(--faculty-primary)', borderColor: 'var(--faculty-primary)' }}
+                                    disabled={isUpdating || newGrade === editingGrade.grade}
                                 >
-                                    Update Grade
+                                    {isUpdating ? 'Updating...' : 'Update Grade'}
                                 </button>
                             </div>
                         </form>

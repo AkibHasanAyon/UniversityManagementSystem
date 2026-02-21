@@ -1,14 +1,33 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { academicApi } from '../../api/academicApi';
 import '../../styles/StudentDashboard.css';
 
 export function ViewEnrollment() {
-    const enrolledCourses = [
-        { code: 'CS301', name: 'Database Systems', instructor: 'Prof. Rahman', credits: 3, semester: 'Fall 2025', status: 'Active', schedule: 'Mon, Wed 10:00-11:30', room: '301 - Block A' },
-        { code: 'MATH201', name: 'Linear Algebra', instructor: 'Dr. Farhana', credits: 4, semester: 'Fall 2025', status: 'Active', schedule: 'Tue, Thu 08:30-10:00', room: '202 - Science' },
-        { code: 'PHY101', name: 'Physics I', instructor: 'Prof. Jamal Uddin', credits: 4, semester: 'Fall 2025', status: 'Active', schedule: 'Mon, Wed, Fri 11:00-12:00', room: '105 - Science' },
-        { code: 'ENG202', name: 'Technical Writing', instructor: 'Dr. Nargis Parvin', credits: 3, semester: 'Fall 2025', status: 'Active', schedule: 'Tue 14:00-17:00', room: '404 - Humanities' },
-        { code: 'CS302', name: 'Algorithms', instructor: 'Prof. Rahman', credits: 3, semester: 'Fall 2025', status: 'Active', schedule: 'Mon, Wed 13:00-14:30', room: '302 - Block A' },
-    ];
+    const [enrolledCourses, setEnrolledCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+        const fetchEnrollments = async () => {
+            try {
+                // Fetch enrollments for the current student
+                const data = await academicApi.listEnrollments('', 'current');
+                setEnrolledCourses(data.results || data || []);
+            } catch (err) {
+                console.error("Failed to fetch enrollments", err);
+                setError("Failed to load your enrolled courses.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchEnrollments();
+    }, []);
+
+    const totalCredits = enrolledCourses.reduce((sum, enroll) => {
+        const credits = typeof enroll.course === 'object' ? (enroll.course?.credits || 0) : 0;
+        return sum + Number(credits);
+    }, 0);
 
     return (
         <div>
@@ -17,56 +36,88 @@ export function ViewEnrollment() {
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-gray-600)' }}>Your currently enrolled courses</p>
             </div>
 
-            <div className="table-container">
-                <div className="table-wrapper">
-                    <table className="data-table">
-                        <thead>
-                            <tr>
-                                <th>Course Code</th>
-                                <th>Course Name</th>
-                                <th>Instructor</th>
-                                <th>Credits</th>
-                                <th>Schedule</th>
-                                <th>Room</th>
-                                <th>Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {enrolledCourses.map((course, index) => (
-                                <tr key={index}>
-                                    <td style={{ fontWeight: '500' }}>{course.code}</td>
-                                    <td>{course.name}</td>
-                                    <td className="text-muted">{course.instructor}</td>
-                                    <td>{course.credits}</td>
-                                    <td className="text-sm">{course.schedule}</td>
-                                    <td className="text-sm text-muted">{course.room}</td>
-                                    <td>
-                                        <span className="badge active">
-                                            {course.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {error && (
+                <div className="alert-error" style={{ backgroundColor: '#fee2e2', color: '#dc2626', padding: '1rem', borderRadius: '0.5rem', marginBottom: '24px' }}>
+                    <span className="font-medium">{error}</span>
                 </div>
+            )}
+
+            <div className="table-container">
+                {loading ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Loading enrolled courses...</div>
+                ) : (
+                    <div className="table-wrapper">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Course Code</th>
+                                    <th>Course Name</th>
+                                    <th>Instructor</th>
+                                    <th>Credits</th>
+                                    <th>Schedule</th>
+                                    <th>Room</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {enrolledCourses.length > 0 ? enrolledCourses.map((enroll, index) => {
+                                    const course = typeof enroll.course === 'object' ? enroll.course : null;
+
+                                    // If course is an ID string/number and exact nested data is missing
+                                    const code = course?.code || `Course ID: ${enroll.course}`;
+                                    const name = course?.name || '-';
+                                    const instructor = course?.instructor ? `${course.instructor.first_name || ''} ${course.instructor.last_name || ''}` : 'TBA';
+                                    const credits = course?.credits || '-';
+
+                                    const schedDays = Array.isArray(course?.days) ? course.days.join(', ') : (course?.days || '');
+                                    const schedTime = (course?.startTime && course?.endTime) ? `${course.startTime}-${course.endTime}` : '';
+                                    const schedule = schedDays || schedTime ? `${schedDays} ${schedTime}` : 'TBA';
+
+                                    const room = course?.room ? `${course.building || ''} ${course.room}` : 'TBA';
+
+                                    return (
+                                        <tr key={enroll.id || index}>
+                                            <td style={{ fontWeight: '500' }}>{code}</td>
+                                            <td>{name}</td>
+                                            <td className="text-muted">{instructor}</td>
+                                            <td>{credits}</td>
+                                            <td className="text-sm">{schedule}</td>
+                                            <td className="text-sm text-muted">{room}</td>
+                                            <td>
+                                                <span className={`badge ${enroll.status === 'Dropped' ? 'badge-danger' : 'badge-success'}`}>
+                                                    {enroll.status || 'Active'}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    );
+                                }) : (
+                                    <tr>
+                                        <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: '#6b7280' }}>
+                                            You are not enrolled in any courses.
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
 
-            <div className="summary-box">
-                <h3 className="summary-title">Enrollment Summary</h3>
-                <div className="summary-grid">
-                    <div>
-                        <span className="summary-label">Total Courses:</span>
-                        <span className="summary-value">{enrolledCourses.length}</span>
-                    </div>
-                    <div>
-                        <span className="summary-label">Total Credits:</span>
-                        <span className="summary-value">
-                            {enrolledCourses.reduce((sum, course) => sum + course.credits, 0)}
-                        </span>
+            {!loading && enrolledCourses.length > 0 && (
+                <div className="summary-box">
+                    <h3 className="summary-title" style={{ color: 'var(--text-gray-900)' }}>Enrollment Summary</h3>
+                    <div className="summary-grid">
+                        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <span className="summary-label" style={{ color: '#64748b', fontSize: '0.875rem' }}>Total Courses:</span>
+                            <span className="summary-value" style={{ display: 'block', fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a', marginTop: '4px' }}>{enrolledCourses.length}</span>
+                        </div>
+                        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                            <span className="summary-label" style={{ color: '#64748b', fontSize: '0.875rem' }}>Total Credits:</span>
+                            <span className="summary-value" style={{ display: 'block', fontSize: '1.5rem', fontWeight: 'bold', color: '#0f172a', marginTop: '4px' }}>{totalCredits}</span>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }

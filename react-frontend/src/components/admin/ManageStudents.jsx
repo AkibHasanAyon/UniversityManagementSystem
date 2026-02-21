@@ -1,38 +1,58 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Search, X } from 'lucide-react';
+import { usersApi } from '../../api/usersApi';
 import '../../styles/Dashboard.css';
 
 export function ManageStudents() {
-    const [students, setStudents] = useState([
-        { id: 'STU001', name: 'Ayesha Siddiqua', email: 'ayesha.s@university.edu', major: 'Computer Science', year: '3rd', gpa: '3.72' },
-        { id: 'STU002', name: 'Rahim Ahmed', email: 'rahim.a@university.edu', major: 'Mathematics', year: '2nd', gpa: '3.85' },
-        { id: 'STU003', name: 'Sadia Islam', email: 'sadia.i@university.edu', major: 'Physics', year: '4th', gpa: '3.91' },
-        { id: 'STU004', name: 'Karim Uddin', email: 'karim.u@university.edu', major: 'Engineering', year: '1st', gpa: '3.65' },
-        { id: 'STU005', name: 'Fatema Begum', email: 'fatema.b@university.edu', major: 'Business', year: '3rd', gpa: '3.78' },
-        { id: 'STU006', name: 'Tanvir Hasan', email: 'tanvir.h@university.edu', major: 'Computer Science', year: '2nd', gpa: '3.88' },
-    ]);
-
+    const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearch, setDebouncedSearch] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
     const itemsPerPage = 5;
 
-    const filteredStudents = students.filter(student =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setDebouncedSearch(searchTerm);
+            setCurrentPage(1); // Reset to first page on search
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
-    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-    const paginatedStudents = filteredStudents.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    const fetchStudents = useCallback(async () => {
+        try {
+            // Note: API returns array directly if no pagination, or { count, next, previous, results } if paginated
+            const data = await usersApi.listStudents(debouncedSearch, currentPage, itemsPerPage);
+            if (data.results) {
+                setStudents(data.results);
+                setTotalItems(data.count);
+            } else {
+                // Not paginated fallback
+                setStudents(data);
+                setTotalItems(data.length);
+            }
+        } catch (error) {
+            console.error("Failed to fetch students", error);
+        }
+    }, [debouncedSearch, currentPage]);
 
-    const handleDelete = (id) => {
+    useEffect(() => {
+        fetchStudents();
+    }, [fetchStudents]);
+
+    const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+
+    const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this student?')) {
-            setStudents(students.filter(s => s.id !== id));
+            try {
+                await usersApi.deleteStudent(id);
+                fetchStudents();
+            } catch (error) {
+                console.error("Failed to delete student", error);
+                alert("Failed to delete student. Please try again.");
+            }
         }
     };
 
@@ -58,7 +78,7 @@ export function ManageStudents() {
                     <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
                     <input
                         type="text"
-                        placeholder="Search by name, email, or ID..."
+                        placeholder="Search by name or email..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="input-field pl-10"
@@ -72,24 +92,16 @@ export function ManageStudents() {
                     <table className="data-table">
                         <thead>
                             <tr>
-                                <th>Student ID</th>
                                 <th>Name</th>
                                 <th>Email</th>
-                                <th>Major</th>
-                                <th>Year</th>
-                                <th>GPA</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedStudents.map((student) => (
+                            {students.length > 0 ? students.map((student) => (
                                 <tr key={student.id}>
-                                    <td className="font-medium">{student.id}</td>
-                                    <td>{student.name}</td>
+                                    <td className="font-medium">{student.first_name} {student.last_name}</td>
                                     <td className="text-muted">{student.email}</td>
-                                    <td>{student.major}</td>
-                                    <td className="text-muted">{student.year}</td>
-                                    <td className="font-medium">{student.gpa}</td>
                                     <td>
                                         <div className="flex gap-2">
                                             <button
@@ -109,42 +121,48 @@ export function ManageStudents() {
                                         </div>
                                     </td>
                                 </tr>
-                            ))}
+                            )) : (
+                                <tr>
+                                    <td colSpan="3" className="text-center py-4 text-gray-500">No students found.</td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                <div className="pagination p-4 flex-between-center border-t">
-                    <div className="text-sm text-gray-600">
-                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} students
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
-                            className="btn-outline text-sm"
-                        >
-                            Previous
-                        </button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                {totalItems > itemsPerPage && (
+                    <div className="pagination p-4 flex-between-center border-t">
+                        <div className="text-sm text-gray-600">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} students
+                        </div>
+                        <div className="flex gap-2">
                             <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                className={`btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline'}`}
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className="btn-outline text-sm"
                             >
-                                {page}
+                                Previous
                             </button>
-                        ))}
-                        <button
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
-                            className="btn-outline text-sm"
-                        >
-                            Next
-                        </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline'}`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage === totalPages}
+                                className="btn-outline text-sm"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Add/Edit Modal */}
@@ -155,15 +173,7 @@ export function ManageStudents() {
                         setShowAddModal(false);
                         setEditingStudent(null);
                     }}
-                    onSave={(student) => {
-                        if (editingStudent) {
-                            setStudents(students.map(s => s.id === student.id ? student : s));
-                        } else {
-                            setStudents([...students, student]);
-                        }
-                        setShowAddModal(false);
-                        setEditingStudent(null);
-                    }}
+                    onSave={fetchStudents}
                 />
             )}
         </div>
@@ -171,18 +181,45 @@ export function ManageStudents() {
 }
 
 function StudentModal({ student, onClose, onSave }) {
-    const [formData, setFormData] = useState(student || {
-        id: `STU${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-        name: '',
-        email: '',
-        major: '',
-        year: '',
-        gpa: '',
+    const [formData, setFormData] = useState({
+        email: student?.email || '',
+        first_name: student?.first_name || '',
+        last_name: student?.last_name || '',
+        password: '',
+        role: 'student'
     });
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSave(formData);
+        setSaving(true);
+        setError('');
+
+        try {
+            if (student) {
+                // Edit mode
+                // Don't send password if empty on edit
+                const dataToUpdate = { ...formData };
+                if (!dataToUpdate.password) delete dataToUpdate.password;
+                await usersApi.updateStudent(student.id, dataToUpdate);
+            } else {
+                // Add mode
+                if (!formData.password) {
+                    setError("Password is required for new students.");
+                    setSaving(false);
+                    return;
+                }
+                await usersApi.createStudent(formData);
+            }
+            onSave(); // Refresh list
+            onClose();
+        } catch (err) {
+            console.error("Failed to save student", err);
+            setError(err.response?.data?.detail || "Failed to save student details. Please try again.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -190,32 +227,35 @@ function StudentModal({ student, onClose, onSave }) {
             <div className="modal-content">
                 <div className="modal-header">
                     <h3 className="text-lg font-bold">{student ? 'Edit Student' : 'Add New Student'}</h3>
-                    <button onClick={onClose} className="close-btn">
+                    <button onClick={onClose} className="close-btn" disabled={saving}>
                         <X size={20} />
                     </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                    <div className="form-group">
-                        <label>Student ID</label>
-                        <input
-                            type="text"
-                            value={formData.id}
-                            onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                            className="input-field"
-                            required
-                        />
-                    </div>
+                    {error && <div className="text-red-500 text-sm mb-4">{error}</div>}
 
-                    <div className="form-group">
-                        <label>Full Name</label>
-                        <input
-                            type="text"
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="input-field"
-                            required
-                        />
+                    <div className="form-group grid grid-cols-2 gap-4">
+                        <div>
+                            <label>First Name</label>
+                            <input
+                                type="text"
+                                value={formData.first_name}
+                                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+                                className="input-field w-full"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <label>Last Name</label>
+                            <input
+                                type="text"
+                                value={formData.last_name}
+                                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                                className="input-field w-full"
+                                required
+                            />
+                        </div>
                     </div>
 
                     <div className="form-group">
@@ -229,65 +269,24 @@ function StudentModal({ student, onClose, onSave }) {
                         />
                     </div>
 
-                    {!student && (
-                        <div className="form-group">
-                            <label>Temporary Password</label>
-                            <input
-                                type="text"
-                                value={formData.tempPassword || ''}
-                                onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
-                                className="input-field"
-                                placeholder="Assign a temporary password"
-                                required
-                            />
-                        </div>
-                    )}
-
                     <div className="form-group">
-                        <label>Major</label>
+                        <label>{student ? 'New Password (leave blank to keep current)' : 'Password'}</label>
                         <input
-                            type="text"
-                            value={formData.major}
-                            onChange={(e) => setFormData({ ...formData, major: e.target.value })}
+                            type="password"
+                            value={formData.password}
+                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                             className="input-field"
-                            required
-                        />
-                    </div>
-
-                    <div className="form-group">
-                        <label>Year</label>
-                        <select
-                            value={formData.year}
-                            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-                            className="input-field"
-                            required
-                        >
-                            <option value="">Select Year</option>
-                            <option value="1st">1st Year</option>
-                            <option value="2nd">2nd Year</option>
-                            <option value="3rd">3rd Year</option>
-                            <option value="4th">4th Year</option>
-                        </select>
-                    </div>
-
-                    <div className="form-group">
-                        <label>GPA</label>
-                        <input
-                            type="text"
-                            value={formData.gpa}
-                            onChange={(e) => setFormData({ ...formData, gpa: e.target.value })}
-                            className="input-field"
-                            placeholder="e.g., 3.75"
-                            required
+                            placeholder={student ? '' : 'Enter password'}
+                            required={!student}
                         />
                     </div>
 
                     <div className="modal-actions">
-                        <button type="button" onClick={onClose} className="btn-outline flex-1">
+                        <button type="button" onClick={onClose} className="btn-outline flex-1" disabled={saving}>
                             Cancel
                         </button>
-                        <button type="submit" className="btn-primary flex-1">
-                            {student ? 'Update' : 'Add'} Student
+                        <button type="submit" className="btn-primary flex-1" disabled={saving}>
+                            {saving ? 'Saving...' : (student ? 'Update Student' : 'Add Student')}
                         </button>
                     </div>
                 </form>

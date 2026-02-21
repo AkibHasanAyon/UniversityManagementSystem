@@ -42,21 +42,3 @@ react-frontend/
 
 4. Open your browser at the URL shown (usually `http://localhost:5173`).
 
-## Key Features
-- **Functional Components**: All components are written as functional components using hooks (`useState`).
-- **CSS Modules approach**: Styles are separated into `src/styles/` for clarity.
-- **Mock Data**: API calls are simulated in `App.jsx` and individual components. Look for comments starting with `API Integration Note` for future backend connection.
-- **Responsive Design**: The UI mimics the original design using standard CSS flexbox and grid.
-
-## API Integration Guide
-To connect to a real backend:
-1. Replace the mock data in `useState` with `useEffect` to fetch data.
-2. Example in `ManageStudents.jsx`:
-   ```jsx
-   useEffect(() => {
-     fetch('/api/students')
-       .then(res => res.json())
-       .then(data => setStudents(data));
-   }, []);
-   ```
-# UniversityManagementSystem

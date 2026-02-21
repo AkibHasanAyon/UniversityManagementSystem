@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Users, LogOut, Menu, X, GraduationCap } from 'lucide-react';
+import { dashboardApi } from '../../api/dashboardApi';
 import { ViewAssignedCourses } from './ViewAssignedCourses';
 import { ViewStudents } from './ViewStudents';
 import { SubmitGrades } from './SubmitGrades';
@@ -104,17 +105,37 @@ export function FacultyDashboard({ user, onLogout }) {
 }
 
 function OverviewCards() {
+    const [statData, setStatData] = useState({
+        courses: '...',
+        students: '...'
+    });
+    const [schedule, setSchedule] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const data = await dashboardApi.getFacultyStats();
+                setStatData({
+                    courses: data.total_courses ?? data.courses ?? 0,
+                    students: data.total_students ?? data.students ?? 0
+                });
+                if (data.upcoming_classes) {
+                    setSchedule(data.upcoming_classes);
+                }
+            } catch (err) {
+                console.error("Failed to load faculty stats", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
     const stats = [
-        { label: 'Assigned Courses', value: '4', icon: BookOpen, colorClass: 'green' },
-        { label: 'Total Students', value: '187', icon: Users, colorClass: 'blue' },
+        { label: 'Assigned Courses', value: statData.courses, icon: BookOpen, colorClass: 'green' },
+        { label: 'Total Students', value: statData.students, icon: Users, colorClass: 'blue' },
     ];
-
-    const mockClasses = [
-        { courseCode: 'CS301', courseName: 'Database Systems', startTime: '10:00', endTime: '11:30', days: ['Mon', 'Wed'], room: '301', building: 'Academic Block A', type: 'Lecture', status: 'Scheduled' },
-        { courseCode: 'CS302', courseName: 'Algorithms', startTime: '13:00', endTime: '14:30', days: ['Mon', 'Wed'], room: '302', building: 'Academic Block A', type: 'Lab', status: 'Scheduled' },
-        { courseCode: 'CS401', courseName: 'Advanced DB', startTime: '09:00', endTime: '10:30', days: ['Tue'], room: '405', building: 'Academic Block B', type: 'Lecture', status: 'Scheduled' },
-    ];
-
 
     return (
         <div className="overview-container">
@@ -136,7 +157,11 @@ function OverviewCards() {
                 })}
             </div>
 
-            <ClassScheduleWidget userRole="faculty" classes={mockClasses} />
+            {loading ? (
+                <div style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>Loading schedule...</div>
+            ) : (
+                <ClassScheduleWidget userRole="faculty" classes={schedule} />
+            )}
         </div>
     )
 }
