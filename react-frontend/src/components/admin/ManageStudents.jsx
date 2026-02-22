@@ -1,38 +1,84 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Edit2, Trash2, Search, X } from 'lucide-react';
+import api from '../../services/api';
 import '../../styles/Dashboard.css';
 
 export function ManageStudents() {
-    const [students, setStudents] = useState([
-        { id: 'STU001', name: 'Ayesha Siddiqua', email: 'ayesha.s@university.edu', major: 'Computer Science', year: '3rd', gpa: '3.72' },
-        { id: 'STU002', name: 'Rahim Ahmed', email: 'rahim.a@university.edu', major: 'Mathematics', year: '2nd', gpa: '3.85' },
-        { id: 'STU003', name: 'Sadia Islam', email: 'sadia.i@university.edu', major: 'Physics', year: '4th', gpa: '3.91' },
-        { id: 'STU004', name: 'Karim Uddin', email: 'karim.u@university.edu', major: 'Engineering', year: '1st', gpa: '3.65' },
-        { id: 'STU005', name: 'Fatema Begum', email: 'fatema.b@university.edu', major: 'Business', year: '3rd', gpa: '3.78' },
-        { id: 'STU006', name: 'Tanvir Hasan', email: 'tanvir.h@university.edu', major: 'Computer Science', year: '2nd', gpa: '3.88' },
-    ]);
-
+    const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [showAddModal, setShowAddModal] = useState(false);
     const [editingStudent, setEditingStudent] = useState(null);
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 5;
+    const [totalCount, setTotalCount] = useState(0);
+    const [loading, setLoading] = useState(false);
+    const itemsPerPage = 10;
 
-    const filteredStudents = students.filter(student =>
-        student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const fetchStudents = useCallback(async () => {
+        setLoading(true);
+        try {
+            const res = await api.get('/api/users/students/', {
+                params: { search: searchTerm, page: currentPage, page_size: itemsPerPage }
+            });
+            const data = res.data.data || res.data;
+            setStudents(data.results || data);
+            setTotalCount(res.data.pagination?.count ?? data.count ?? (data.results || data).length);
+        } catch (err) {
+            console.error('Failed to fetch students:', err);
+        } finally {
+            setLoading(false);
+        }
+    }, [searchTerm, currentPage]);
 
-    const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
-    const paginatedStudents = filteredStudents.slice(
-        (currentPage - 1) * itemsPerPage,
-        currentPage * itemsPerPage
-    );
+    useEffect(() => {
+        fetchStudents();
+    }, [fetchStudents]);
 
-    const handleDelete = (id) => {
+    // Reset to page 1 when search changes
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm]);
+
+    const totalPages = Math.ceil(totalCount / itemsPerPage);
+
+    const handleDelete = async (studentId) => {
         if (window.confirm('Are you sure you want to delete this student?')) {
-            setStudents(students.filter(s => s.id !== id));
+            try {
+                await api.delete(`/api/users/students/${studentId}/`);
+                fetchStudents();
+            } catch (err) {
+                alert('Failed to delete student: ' + (err.response?.data?.message || err.message));
+            }
+        }
+    };
+
+    const handleSave = async (formData, isEdit) => {
+        try {
+            if (isEdit) {
+                await api.put(`/api/users/students/${formData.student_id}/`, {
+                    student_id: formData.student_id,
+                    name: formData.name,
+                    email: formData.email,
+                    major: formData.major,
+                    year: formData.year,
+                    gpa: formData.gpa,
+                });
+            } else {
+                await api.post('/api/users/students/', {
+                    student_id: formData.student_id,
+                    name: formData.name,
+                    email: formData.email,
+                    password: formData.password,
+                    major: formData.major,
+                    year: formData.year,
+                    gpa: formData.gpa,
+                });
+            }
+            setShowAddModal(false);
+            setEditingStudent(null);
+            fetchStudents();
+        } catch (err) {
+            const msg = err.response?.data?.message || err.response?.data?.detail || JSON.stringify(err.response?.data) || err.message;
+            alert('Failed to save student: ' + msg);
         }
     };
 
@@ -82,69 +128,77 @@ export function ManageStudents() {
                             </tr>
                         </thead>
                         <tbody>
-                            {paginatedStudents.map((student) => (
-                                <tr key={student.id}>
-                                    <td className="font-medium">{student.id}</td>
-                                    <td>{student.name}</td>
-                                    <td className="text-muted">{student.email}</td>
-                                    <td>{student.major}</td>
-                                    <td className="text-muted">{student.year}</td>
-                                    <td className="font-medium">{student.gpa}</td>
-                                    <td>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setEditingStudent(student)}
-                                                className="text-blue-600 hover:text-blue-800"
-                                                title="Edit"
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(student.id)}
-                                                className="text-red-600 hover:text-red-800"
-                                                title="Delete"
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
+                            {loading ? (
+                                <tr><td colSpan="7" className="text-center py-4">Loading...</td></tr>
+                            ) : students.length === 0 ? (
+                                <tr><td colSpan="7" className="text-center py-4 text-gray-500">No students found.</td></tr>
+                            ) : (
+                                students.map((student) => (
+                                    <tr key={student.student_id || student.id}>
+                                        <td className="font-medium">{student.student_id || student.id}</td>
+                                        <td>{student.name}</td>
+                                        <td className="text-muted">{student.email}</td>
+                                        <td>{student.major}</td>
+                                        <td className="text-muted">{student.year}</td>
+                                        <td className="font-medium">{student.gpa}</td>
+                                        <td>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setEditingStudent(student)}
+                                                    className="text-blue-600 hover:text-blue-800"
+                                                    title="Edit"
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(student.student_id || student.id)}
+                                                    className="text-red-600 hover:text-red-800"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 {/* Pagination */}
-                <div className="pagination p-4 flex-between-center border-t">
-                    <div className="text-sm text-gray-600">
-                        Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredStudents.length)} of {filteredStudents.length} students
-                    </div>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                            disabled={currentPage === 1}
-                            className="btn-outline text-sm"
-                        >
-                            Previous
-                        </button>
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                {totalCount > 0 && (
+                    <div className="pagination p-4 flex-between-center border-t">
+                        <div className="text-sm text-gray-600">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} students
+                        </div>
+                        <div className="flex gap-2">
                             <button
-                                key={page}
-                                onClick={() => setCurrentPage(page)}
-                                className={`btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline'}`}
+                                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                                disabled={currentPage === 1}
+                                className="btn-outline text-sm"
                             >
-                                {page}
+                                Previous
                             </button>
-                        ))}
-                        <button
-                            onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                            disabled={currentPage === totalPages}
-                            className="btn-outline text-sm"
-                        >
-                            Next
-                        </button>
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                                <button
+                                    key={page}
+                                    onClick={() => setCurrentPage(page)}
+                                    className={`btn-sm ${page === currentPage ? 'btn-primary' : 'btn-outline'}`}
+                                >
+                                    {page}
+                                </button>
+                            ))}
+                            <button
+                                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                                disabled={currentPage === totalPages}
+                                className="btn-outline text-sm"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
 
             {/* Add/Edit Modal */}
@@ -155,15 +209,7 @@ export function ManageStudents() {
                         setShowAddModal(false);
                         setEditingStudent(null);
                     }}
-                    onSave={(student) => {
-                        if (editingStudent) {
-                            setStudents(students.map(s => s.id === student.id ? student : s));
-                        } else {
-                            setStudents([...students, student]);
-                        }
-                        setShowAddModal(false);
-                        setEditingStudent(null);
-                    }}
+                    onSave={handleSave}
                 />
             )}
         </div>
@@ -171,18 +217,22 @@ export function ManageStudents() {
 }
 
 function StudentModal({ student, onClose, onSave }) {
-    const [formData, setFormData] = useState(student || {
-        id: `STU${String(Math.floor(Math.random() * 1000)).padStart(3, '0')}`,
-        name: '',
-        email: '',
-        major: '',
-        year: '',
-        gpa: '',
+    const [formData, setFormData] = useState({
+        student_id: student?.student_id || student?.id || `STU${String(Math.floor(Math.random() * 9000) + 1000)}`,
+        name: student?.name || '',
+        email: student?.email || '',
+        password: '',
+        major: student?.major || '',
+        year: student?.year || '',
+        gpa: student?.gpa || '',
     });
+    const [saving, setSaving] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        onSave(formData);
+        setSaving(true);
+        await onSave(formData, !!student);
+        setSaving(false);
     };
 
     return (
@@ -200,8 +250,8 @@ function StudentModal({ student, onClose, onSave }) {
                         <label>Student ID</label>
                         <input
                             type="text"
-                            value={formData.id}
-                            onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                            value={formData.student_id}
+                            onChange={(e) => setFormData({ ...formData, student_id: e.target.value })}
                             className="input-field"
                             required
                         />
@@ -234,8 +284,8 @@ function StudentModal({ student, onClose, onSave }) {
                             <label>Temporary Password</label>
                             <input
                                 type="text"
-                                value={formData.tempPassword || ''}
-                                onChange={(e) => setFormData({ ...formData, tempPassword: e.target.value })}
+                                value={formData.password}
+                                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                                 className="input-field"
                                 placeholder="Assign a temporary password"
                                 required
@@ -286,8 +336,8 @@ function StudentModal({ student, onClose, onSave }) {
                         <button type="button" onClick={onClose} className="btn-outline flex-1">
                             Cancel
                         </button>
-                        <button type="submit" className="btn-primary flex-1">
-                            {student ? 'Update' : 'Add'} Student
+                        <button type="submit" className="btn-primary flex-1" disabled={saving}>
+                            {saving ? 'Saving...' : (student ? 'Update' : 'Add')} Student
                         </button>
                     </div>
                 </form>

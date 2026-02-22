@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Award, LogOut, Menu, X, GraduationCap, FileText } from 'lucide-react';
 import { ViewEnrollment } from './ViewEnrollment';
 import { ViewGrades } from './ViewGrades';
 import { AcademicHistory } from './AcademicHistory';
 import { ClassScheduleWidget } from '../ClassScheduleWidget';
+import api from '../../services/api';
 import '../../styles/Dashboard.css';
-
 import '../../styles/StudentDashboard.css';
 
 export function StudentDashboard({ user, onLogout }) {
@@ -31,7 +31,6 @@ export function StudentDashboard({ user, onLogout }) {
 
     return (
         <div className="dashboard-layout student-theme">
-            {/* Sidebar */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
                 <div className="sidebar-header">
                     {sidebarOpen && (
@@ -68,7 +67,6 @@ export function StudentDashboard({ user, onLogout }) {
                 </nav>
             </aside>
 
-            {/* Main Content */}
             <div className="main-wrapper">
                 <header className="top-header">
                     <div className="header-title">
@@ -98,24 +96,69 @@ export function StudentDashboard({ user, onLogout }) {
 }
 
 function OverviewCards() {
-    const stats = [
-        { label: 'Enrolled Courses', value: '5', icon: BookOpen, color: '#a855f7' },
-        { label: 'Current GPA', value: '3.72', icon: Award, color: '#3b82f6' },
-    ];
+    const [stats, setStats] = useState({
+        enrolled_courses: '...',
+        current_gpa: '...',
+    });
+    const [scheduleClasses, setScheduleClasses] = useState([]);
+    const [enrolledCourses, setEnrolledCourses] = useState([]);
 
-    const mockClasses = [
-        { courseCode: 'CS301', courseName: 'Database Systems', startTime: '10:00', endTime: '11:30', days: ['Mon', 'Wed'], room: '301', building: 'Academic Block A', instructor: 'Prof. Rahman', status: 'Scheduled' },
-        { courseCode: 'MATH201', courseName: 'Linear Algebra', startTime: '08:30', endTime: '10:00', days: ['Tue', 'Thu'], room: '202', building: 'Science Wing', instructor: 'Dr. Farhana', status: 'Scheduled' },
-        { courseCode: 'CS302', courseName: 'Algorithms', startTime: '13:00', endTime: '14:30', days: ['Mon', 'Wed'], room: '302', building: 'Academic Block A', instructor: 'Prof. Rahman', status: 'Rescheduled' },
-    ];
+    useEffect(() => {
+        // Fetch stats
+        api.get('/api/dashboard/student/stats/')
+            .then(res => {
+                const d = res.data.data || res.data;
+                setStats({
+                    enrolled_courses: d.enrolled_courses_count ?? d.enrolled_courses ?? 0,
+                    current_gpa: d.current_gpa ?? d.gpa ?? 'N/A',
+                });
+            })
+            .catch(err => console.error('Failed to load student stats:', err));
 
+        // Fetch schedule — API returns {today: [], tomorrow: [], today_day, tomorrow_day}
+        api.get('/api/academic/schedules/today/')
+            .then(res => {
+                const d = res.data.data || res.data;
+                // Merge today + tomorrow classes, keeping their original days arrays
+                const allClasses = [...(d.today || []), ...(d.tomorrow || [])];
+                setScheduleClasses(allClasses.map(c => ({
+                    courseCode: c.courseCode || c.course_code || '',
+                    courseName: c.courseName || c.course_name || '',
+                    startTime: c.startTime || c.start_time || '',
+                    endTime: c.endTime || c.end_time || '',
+                    days: c.days || [],
+                    room: c.room || '',
+                    building: c.building || '',
+                    instructor: c.instructor || c.instructor_name || '',
+                    status: c.status || 'Scheduled',
+                })));
+            })
+            .catch(err => console.error('Failed to load schedule:', err));
+
+        // Fetch enrolled courses for the list
+        api.get('/api/academic/enrollments/')
+            .then(res => {
+                const data = res.data.data || res.data;
+                const results = data.results || data;
+                setEnrolledCourses(Array.isArray(results) ? results.map(e => ({
+                    code: e.courseCode || e.course_code || '',
+                    name: e.courseName || e.course_name || '',
+                })) : []);
+            })
+            .catch(err => console.error('Failed to load enrollments:', err));
+    }, []);
+
+    const statCards = [
+        { label: 'Enrolled Courses', value: stats.enrolled_courses, icon: BookOpen, color: '#a855f7' },
+        { label: 'Current GPA', value: stats.current_gpa, icon: Award, color: '#3b82f6' },
+    ];
 
     return (
         <div className="overview-container">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>Your Academic Summary</h2>
 
             <div className="stats-grid">
-                {stats.map((stat, index) => {
+                {statCards.map((stat, index) => {
                     const Icon = stat.icon;
                     return (
                         <div key={index} className="stat-card">
@@ -131,21 +174,24 @@ function OverviewCards() {
                 })}
             </div>
 
-            <ClassScheduleWidget userRole="student" classes={mockClasses} />
+            <ClassScheduleWidget userRole="student" classes={scheduleClasses} />
 
             <div className="summary-box" style={{ background: 'white', marginTop: '32px' }}>
-
                 <h3 className="summary-title" style={{ color: 'var(--text-gray-900)', fontSize: '1.125rem', marginBottom: '16px' }}>Current Semester Courses</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {['CS301 - Database Systems', 'MATH201 - Linear Algebra', 'PHY101 - Physics I', 'ENG202 - Technical Writing', 'CS302 - Algorithms'].map((course, idx) => (
-                        <div key={idx} className="course-item">
-                            <div style={{ display: 'flex', alignItems: 'center' }}>
-                                <div className="progress-dot"></div>
-                                <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-gray-900)' }}>{course}</span>
+                    {enrolledCourses.length > 0 ? (
+                        enrolledCourses.map((course, idx) => (
+                            <div key={idx} className="course-item">
+                                <div style={{ display: 'flex', alignItems: 'center' }}>
+                                    <div className="progress-dot"></div>
+                                    <span style={{ fontSize: '0.875rem', fontWeight: '500', color: 'var(--text-gray-900)' }}>{course.code} - {course.name}</span>
+                                </div>
+                                <span className="in-progress-badge">In Progress</span>
                             </div>
-                            <span className="in-progress-badge">In Progress</span>
-                        </div>
-                    ))}
+                        ))
+                    ) : (
+                        <p className="text-gray-500 text-sm">No courses enrolled yet.</p>
+                    )}
                 </div>
             </div>
         </div>

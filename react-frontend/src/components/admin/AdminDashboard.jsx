@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Users, BookOpen, GraduationCap, LogOut, Menu, X } from 'lucide-react';
 import { ManageStudents } from './ManageStudents';
 import { ManageFaculty } from './ManageFaculty';
@@ -6,16 +6,14 @@ import { ManageCourses } from './ManageCourses';
 import { AssignCourses } from './AssignCourses';
 import { ViewRecords } from './ViewRecords';
 import { StudentEnrollment } from './StudentEnrollment';
+import api from '../../services/api';
 
 import '../../styles/Dashboard.css';
-
-// Placeholder removed
 
 export function AdminDashboard({ user, onLogout }) {
     const [currentView, setCurrentView] = useState('overview');
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
-    // Navigation Items
     const menuItems = [
         { id: 'overview', label: 'Overview', icon: Menu },
         { id: 'students', label: 'Manage Students', icon: Users },
@@ -24,27 +22,23 @@ export function AdminDashboard({ user, onLogout }) {
         { id: 'assign', label: 'Assign Courses', icon: GraduationCap },
         { id: 'enrollment', label: 'Student Enrollment', icon: Users },
         { id: 'records', label: 'Academic Records', icon: BookOpen },
-
     ];
 
-    // Render content based on selected view
     const renderContent = () => {
         switch (currentView) {
-            case 'overview': return <OverviewCards />;
+            case 'overview': return <OverviewCards onNavigate={setCurrentView} />;
             case 'students': return <ManageStudents />;
             case 'faculty': return <ManageFaculty />;
             case 'courses': return <ManageCourses />;
             case 'assign': return <AssignCourses />;
             case 'enrollment': return <StudentEnrollment />;
             case 'records': return <ViewRecords />;
-
-            default: return <OverviewCards />;
+            default: return <OverviewCards onNavigate={setCurrentView} />;
         }
     };
 
     return (
         <div className="dashboard-layout">
-            {/* Sidebar Navigation */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
                 <div className="sidebar-header">
                     {sidebarOpen && (
@@ -81,7 +75,6 @@ export function AdminDashboard({ user, onLogout }) {
                 </nav>
             </aside>
 
-            {/* Main Content Area */}
             <div className="main-wrapper">
                 <header className="top-header">
                     <div className="header-title">
@@ -110,21 +103,38 @@ export function AdminDashboard({ user, onLogout }) {
     );
 }
 
-// Overview Component
-function OverviewCards() {
-    const stats = [
-        { label: 'Total Students', value: '2,847', icon: Users, colorClass: 'blue' },
-        { label: 'Total Faculty', value: '186', icon: Users, colorClass: 'green' },
-        { label: 'Total Courses', value: '342', icon: BookOpen, colorClass: 'purple' },
+function OverviewCards({ onNavigate }) {
+    const [stats, setStats] = useState({
+        total_students: '...',
+        total_faculty: '...',
+        total_courses: '...',
+    });
+
+    useEffect(() => {
+        api.get('/api/dashboard/admin/stats/')
+            .then(res => {
+                const d = res.data.data || res.data;
+                setStats({
+                    total_students: d.total_students ?? d.student_count ?? 0,
+                    total_faculty: d.total_faculty ?? d.faculty_count ?? 0,
+                    total_courses: d.total_courses ?? d.course_count ?? 0,
+                });
+            })
+            .catch(err => console.error('Failed to load admin stats:', err));
+    }, []);
+
+    const statCards = [
+        { label: 'Total Students', value: stats.total_students, icon: Users, colorClass: 'blue' },
+        { label: 'Total Faculty', value: stats.total_faculty, icon: Users, colorClass: 'green' },
+        { label: 'Total Courses', value: stats.total_courses, icon: BookOpen, colorClass: 'purple' },
     ];
 
     return (
         <div className="overview-container">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold', fontSize: '1.25rem' }}>System Overview</h2>
 
-            {/* Statistics Cards */}
             <div className="stats-grid">
-                {stats.map((stat, i) => {
+                {statCards.map((stat, i) => {
                     const Icon = stat.icon;
                     return (
                         <div key={i} className="stat-card">
@@ -140,13 +150,12 @@ function OverviewCards() {
                 })}
             </div>
 
-            {/* Quick Actions Section */}
             <div className="quick-actions">
                 <h3>Quick Actions</h3>
                 <div className="actions-grid">
-                    <button className="action-btn blue">Add New Student</button>
-                    <button className="action-btn green">Add New Faculty</button>
-                    <button className="action-btn purple">Create New Course</button>
+                    <button className="action-btn blue" onClick={() => onNavigate('students')}>Add New Student</button>
+                    <button className="action-btn green" onClick={() => onNavigate('faculty')}>Add New Faculty</button>
+                    <button className="action-btn purple" onClick={() => onNavigate('courses')}>Create New Course</button>
                 </div>
             </div>
         </div>

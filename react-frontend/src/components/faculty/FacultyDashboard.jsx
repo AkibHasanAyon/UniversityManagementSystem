@@ -1,14 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BookOpen, Users, LogOut, Menu, X, GraduationCap } from 'lucide-react';
 import { ViewAssignedCourses } from './ViewAssignedCourses';
 import { ViewStudents } from './ViewStudents';
 import { SubmitGrades } from './SubmitGrades';
 import { UpdateGrades } from './UpdateGrades';
 import { ClassScheduleWidget } from '../ClassScheduleWidget';
+import api from '../../services/api';
 import '../../styles/Dashboard.css';
-
-
-// Placeholder removed
 
 export function FacultyDashboard({ user, onLogout }) {
     const [currentView, setCurrentView] = useState('overview');
@@ -35,7 +33,6 @@ export function FacultyDashboard({ user, onLogout }) {
 
     return (
         <div className="dashboard-layout">
-            {/* Sidebar - using same styles as Admin */}
             <aside className={`sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
                 <div className="sidebar-header">
                     {sidebarOpen && (
@@ -72,13 +69,10 @@ export function FacultyDashboard({ user, onLogout }) {
                 </nav>
             </aside>
 
-            {/* Main Content */}
             <div className="main-wrapper">
                 <header className="top-header">
                     <div className="header-title">
-                        <h1 style={{
-                            color: 'var(--emerald-500)'
-                        }}>Faculty Dashboard</h1>
+                        <h1 style={{ color: 'var(--emerald-500)' }}>Faculty Dashboard</h1>
                         <p>Manage your courses and students</p>
                     </div>
                     <div className="header-profile">
@@ -104,23 +98,53 @@ export function FacultyDashboard({ user, onLogout }) {
 }
 
 function OverviewCards() {
-    const stats = [
-        { label: 'Assigned Courses', value: '4', icon: BookOpen, colorClass: 'green' },
-        { label: 'Total Students', value: '187', icon: Users, colorClass: 'blue' },
-    ];
+    const [stats, setStats] = useState({
+        assigned_courses: '...',
+        total_students: '...',
+    });
+    const [scheduleClasses, setScheduleClasses] = useState([]);
 
-    const mockClasses = [
-        { courseCode: 'CS301', courseName: 'Database Systems', startTime: '10:00', endTime: '11:30', days: ['Mon', 'Wed'], room: '301', building: 'Academic Block A', type: 'Lecture', status: 'Scheduled' },
-        { courseCode: 'CS302', courseName: 'Algorithms', startTime: '13:00', endTime: '14:30', days: ['Mon', 'Wed'], room: '302', building: 'Academic Block A', type: 'Lab', status: 'Scheduled' },
-        { courseCode: 'CS401', courseName: 'Advanced DB', startTime: '09:00', endTime: '10:30', days: ['Tue'], room: '405', building: 'Academic Block B', type: 'Lecture', status: 'Scheduled' },
-    ];
+    useEffect(() => {
+        api.get('/api/dashboard/faculty/stats/')
+            .then(res => {
+                const d = res.data.data || res.data;
+                setStats({
+                    assigned_courses: d.assigned_courses_count ?? d.assigned_courses ?? d.total_courses ?? 0,
+                    total_students: d.total_students_count ?? d.total_students ?? 0,
+                });
+            })
+            .catch(err => console.error('Failed to load faculty stats:', err));
 
+        api.get('/api/academic/schedules/today/')
+            .then(res => {
+                const d = res.data.data || res.data;
+                // Merge today + tomorrow classes, keeping their original days arrays
+                const allClasses = [...(d.today || []), ...(d.tomorrow || [])];
+                setScheduleClasses(allClasses.map(c => ({
+                    courseCode: c.courseCode || c.course_code || '',
+                    courseName: c.courseName || c.course_name || '',
+                    startTime: c.startTime || c.start_time || '',
+                    endTime: c.endTime || c.end_time || '',
+                    days: c.days || [],
+                    room: c.room || '',
+                    building: c.building || '',
+                    type: c.type || 'Lecture',
+                    status: c.status || 'Scheduled',
+                })));
+            })
+            .catch(err => console.error('Failed to load schedule:', err));
+    }, []);
+
+    const statCards = [
+        { label: 'Assigned Courses', value: stats.assigned_courses, icon: BookOpen, colorClass: 'green' },
+        { label: 'Total Students', value: stats.total_students, icon: Users, colorClass: 'blue' },
+    ];
 
     return (
         <div className="overview-container">
             <h2 style={{ marginBottom: '1.5rem', fontWeight: 'bold' }}>Your Overview</h2>
             <div className="stats-grid">
-                {stats.map((stat, i) => {
+                {statCards.map((stat, i) => {
                     const Icon = stat.icon;
                     return (
                         <div key={i} className="stat-card">
@@ -136,8 +160,7 @@ function OverviewCards() {
                 })}
             </div>
 
-            <ClassScheduleWidget userRole="faculty" classes={mockClasses} />
+            <ClassScheduleWidget userRole="faculty" classes={scheduleClasses} />
         </div>
     )
 }
-

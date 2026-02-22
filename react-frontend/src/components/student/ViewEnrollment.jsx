@@ -1,14 +1,32 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import api from '../../services/api';
 import '../../styles/StudentDashboard.css';
 
 export function ViewEnrollment() {
-    const enrolledCourses = [
-        { code: 'CS301', name: 'Database Systems', instructor: 'Prof. Rahman', credits: 3, semester: 'Fall 2025', status: 'Active', schedule: 'Mon, Wed 10:00-11:30', room: '301 - Block A' },
-        { code: 'MATH201', name: 'Linear Algebra', instructor: 'Dr. Farhana', credits: 4, semester: 'Fall 2025', status: 'Active', schedule: 'Tue, Thu 08:30-10:00', room: '202 - Science' },
-        { code: 'PHY101', name: 'Physics I', instructor: 'Prof. Jamal Uddin', credits: 4, semester: 'Fall 2025', status: 'Active', schedule: 'Mon, Wed, Fri 11:00-12:00', room: '105 - Science' },
-        { code: 'ENG202', name: 'Technical Writing', instructor: 'Dr. Nargis Parvin', credits: 3, semester: 'Fall 2025', status: 'Active', schedule: 'Tue 14:00-17:00', room: '404 - Humanities' },
-        { code: 'CS302', name: 'Algorithms', instructor: 'Prof. Rahman', credits: 3, semester: 'Fall 2025', status: 'Active', schedule: 'Mon, Wed 13:00-14:30', room: '302 - Block A' },
-    ];
+    const [enrolledCourses, setEnrolledCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        api.get('/api/academic/enrollments/')
+            .then(res => {
+                const data = res.data.data || res.data;
+                const results = data.results || data;
+                setEnrolledCourses(Array.isArray(results) ? results.map(e => ({
+                    code: e.courseCode || e.course_code || '',
+                    name: e.courseName || e.course_name || '',
+                    instructor: e.instructor || e.instructor_name || '',
+                    credits: e.credits || 0,
+                    semester: e.semester || '',
+                    status: e.status || 'Active',
+                    schedule: e.schedule || '',
+                    room: e.room || '',
+                })) : []);
+            })
+            .catch(err => console.error('Failed to load enrollments:', err))
+            .finally(() => setLoading(false));
+    }, []);
+
+    if (loading) return <div className="text-center py-8">Loading...</div>;
 
     return (
         <div>
@@ -32,21 +50,23 @@ export function ViewEnrollment() {
                             </tr>
                         </thead>
                         <tbody>
-                            {enrolledCourses.map((course, index) => (
-                                <tr key={index}>
-                                    <td style={{ fontWeight: '500' }}>{course.code}</td>
-                                    <td>{course.name}</td>
-                                    <td className="text-muted">{course.instructor}</td>
-                                    <td>{course.credits}</td>
-                                    <td className="text-sm">{course.schedule}</td>
-                                    <td className="text-sm text-muted">{course.room}</td>
-                                    <td>
-                                        <span className="badge active">
-                                            {course.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
+                            {enrolledCourses.length === 0 ? (
+                                <tr><td colSpan="7" className="text-center py-4 text-gray-500">No enrollments found.</td></tr>
+                            ) : (
+                                enrolledCourses.map((course, index) => (
+                                    <tr key={index}>
+                                        <td style={{ fontWeight: '500' }}>{course.code}</td>
+                                        <td>{course.name}</td>
+                                        <td className="text-muted">{course.instructor}</td>
+                                        <td>{course.credits}</td>
+                                        <td className="text-sm">{course.schedule || 'N/A'}</td>
+                                        <td className="text-sm text-muted">{course.room || 'N/A'}</td>
+                                        <td>
+                                            <span className="badge active">{course.status}</span>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
@@ -62,7 +82,7 @@ export function ViewEnrollment() {
                     <div>
                         <span className="summary-label">Total Credits:</span>
                         <span className="summary-value">
-                            {enrolledCourses.reduce((sum, course) => sum + course.credits, 0)}
+                            {enrolledCourses.reduce((sum, course) => sum + (Number(course.credits) || 0), 0)}
                         </span>
                     </div>
                 </div>

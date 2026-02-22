@@ -1,39 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle } from 'lucide-react';
+import api from '../../services/api';
 import '../../styles/Dashboard.css';
 
 export function SubmitGrades() {
     const [selectedCourse, setSelectedCourse] = useState('');
     const [grades, setGrades] = useState([]);
     const [showSuccess, setShowSuccess] = useState(false);
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
 
-    const courses = [
-        { code: 'CS301', name: 'Database Systems' },
-        { code: 'CS302', name: 'Algorithms' },
-        { code: 'CS405', name: 'Software Engineering' },
-        { code: 'CS201', name: 'Data Structures' },
-    ];
+    useEffect(() => {
+        api.get('/api/academic/courses/')
+            .then(res => {
+                const data = res.data.data || res.data;
+                const results = data.results || data;
+                setCourses(Array.isArray(results) ? results.map(c => ({
+                    code: c.code,
+                    name: c.name,
+                    id: c.id,
+                })) : []);
+            })
+            .catch(err => console.error('Failed to load courses:', err))
+            .finally(() => setLoading(false));
+    }, []);
 
-    const students = {
-        'CS301': [
-            { id: 'STU001', name: 'Ayesha Siddiqua' },
-            { id: 'STU002', name: 'Rahim Ahmed' },
-            { id: 'STU006', name: 'Tanvir Hasan' },
-        ],
-        'CS302': [
-            { id: 'STU007', name: 'Salma Begum' },
-            { id: 'STU008', name: 'Ali Hossain' },
-        ],
-        'CS405': [
-            { id: 'STU009', name: 'Jasmine Akter' },
-        ],
-        'CS201': [],
-    };
-
-    const handleCourseChange = (courseCode) => {
+    const handleCourseChange = async (courseCode) => {
         setSelectedCourse(courseCode);
-        const courseStudents = students[courseCode] || [];
-        setGrades(courseStudents.map(s => ({ studentId: s.id, studentName: s.name, grade: '' })));
+        if (!courseCode) {
+            setGrades([]);
+            return;
+        }
+
+        try {
+            const res = await api.get('/api/academic/enrollments/', {
+                params: { course_code: courseCode }
+            });
+            const data = res.data.data || res.data;
+            const results = data.results || data;
+            setGrades(Array.isArray(results) ? results.map(e => ({
+                studentId: e.studentId || e.student_id || '',
+                studentName: e.studentName || e.student_name || '',
+                grade: '',
+            })) : []);
+        } catch (err) {
+            console.error('Failed to load enrollments:', err);
+            setGrades([]);
+        }
     };
 
     const handleGradeChange = (studentId, grade) => {
@@ -42,15 +56,35 @@ export function SubmitGrades() {
         ));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        setShowSuccess(true);
-        setTimeout(() => {
-            setShowSuccess(false);
-            setSelectedCourse('');
-            setGrades([]);
-        }, 2000);
+        setSubmitting(true);
+
+        try {
+            await api.post('/api/academic/grades/bulk/', {
+                course_code: selectedCourse,
+                grades: grades
+                    .filter(g => g.grade)
+                    .map(g => ({
+                        student_id: g.studentId,
+                        grade: g.grade,
+                    })),
+            });
+
+            setShowSuccess(true);
+            setTimeout(() => {
+                setShowSuccess(false);
+                setSelectedCourse('');
+                setGrades([]);
+            }, 2000);
+        } catch (err) {
+            alert('Failed to submit grades: ' + (err.response?.data?.message || err.response?.data?.detail || JSON.stringify(err.response?.data) || err.message));
+        } finally {
+            setSubmitting(false);
+        }
     };
+
+    if (loading) return <div className="text-center py-8">Loading...</div>;
 
     return (
         <div>
@@ -59,7 +93,6 @@ export function SubmitGrades() {
                 <p className="text-gray-600 font-sm">Enter and submit student grades for your courses</p>
             </div>
 
-            {/* Success Message */}
             {showSuccess && (
                 <div className="alert-success mb-6">
                     <CheckCircle className="w-5 h-5" />
@@ -67,16 +100,11 @@ export function SubmitGrades() {
                 </div>
             )}
 
-            {/* Course Selection */}
             <div className="card p-6 mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                     Select Course <span className="text-red-500">*</span>
                 </label>
-                <select
-                    value={selectedCourse}
-                    onChange={(e) => handleCourseChange(e.target.value)}
-                    className="input-field"
-                >
+                <select value={selectedCourse} onChange={(e) => handleCourseChange(e.target.value)} className="input-field">
                     <option value="">Choose a course...</option>
                     {courses.map(course => (
                         <option key={course.code} value={course.code}>{course.code} - {course.name}</option>
@@ -84,7 +112,6 @@ export function SubmitGrades() {
                 </select>
             </div>
 
-            {/* Grade Entry Form */}
             {selectedCourse && grades.length > 0 && (
                 <form onSubmit={handleSubmit}>
                     <div className="table-container mb-6">
@@ -123,11 +150,8 @@ export function SubmitGrades() {
                         </div>
                     </div>
 
-                    <button
-                        type="submit"
-                        className="btn-green w-full py-3"
-                    >
-                        Submit All Grades
+                    <button type="submit" className="btn-green w-full py-3" disabled={submitting}>
+                        {submitting ? 'Submitting...' : 'Submit All Grades'}
                     </button>
                 </form>
             )}

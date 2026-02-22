@@ -6,19 +6,32 @@ import bgImage from '../../assets/login-bg.png';
 /**
  * LoginPage Component
  * Handles user login and role selection.
- * @param {function} onLogin - Callback function when user logs in successfully
+ * @param {function} onLogin - Callback: onLogin(email, password) => Promise
+ * @param {function} onForgotPassword - Callback to navigate to forgot password page
  */
-export function LoginPage({ onLogin }) {
-    // State for the selected role (admin, faculty, or student)
-    const [selectedRole, setSelectedRole] = useState('student');
+export function LoginPage({ onLogin, onForgotPassword }) {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        // In a real app, validate credentials here.
-        // For now, we just pass the role and email to the parent component.
-        onLogin(selectedRole, email);
+        setError('');
+        setIsLoading(true);
+
+        try {
+            await onLogin(email, password);
+        } catch (err) {
+            const msg =
+                err.response?.data?.detail ||
+                err.response?.data?.message ||
+                err.response?.data?.error ||
+                'Invalid credentials. Please try again.';
+            setError(msg);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -41,33 +54,25 @@ export function LoginPage({ onLogin }) {
                     <p>Management System</p>
                 </div>
 
-                {/* Role Selection */}
-                <div className="role-section">
-                    <label className="section-label">Select Role</label>
-                    <div className="role-buttons">
-                        <button
-                            type="button"
-                            onClick={() => setSelectedRole('admin')}
-                            className={`role-btn admin ${selectedRole === 'admin' ? 'active' : ''}`}
-                        >
-                            Admin
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setSelectedRole('faculty')}
-                            className={`role-btn faculty ${selectedRole === 'faculty' ? 'active' : ''}`}
-                        >
-                            Faculty
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setSelectedRole('student')}
-                            className={`role-btn student ${selectedRole === 'student' ? 'active' : ''}`}
-                        >
-                            Student
-                        </button>
+                {/* Welcome subtitle */}
+                <p style={{ textAlign: 'center', color: '#6b7280', fontSize: '0.9rem', marginBottom: '8px' }}>
+                    Sign in with your university credentials
+                </p>
+
+                {/* Error Message */}
+                {error && (
+                    <div style={{
+                        background: '#fef2f2',
+                        border: '1px solid #fecaca',
+                        color: '#dc2626',
+                        padding: '10px 16px',
+                        borderRadius: '8px',
+                        fontSize: '0.875rem',
+                        marginBottom: '8px'
+                    }}>
+                        {error}
                     </div>
-                </div>
+                )}
 
                 {/* Login Form */}
                 <form onSubmit={handleSubmit} className="login-form">
@@ -95,15 +100,15 @@ export function LoginPage({ onLogin }) {
                         />
                     </div>
 
-                    <button type="submit" className="signin-btn">
-                        Sign In
+                    <button type="submit" className="signin-btn" disabled={isLoading}>
+                        {isLoading ? 'Signing In...' : 'Sign In'}
                     </button>
 
                     <div className="forgot-password">
                         <button
                             type="button"
                             className="text-btn"
-                            onClick={() => alert('Password reset link has been sent to your email')}
+                            onClick={onForgotPassword}
                         >
                             Forgot Password?
                         </button>

@@ -1,33 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { LoginPage } from './components/login/LoginPage';
+import { ForgotPasswordPage } from './components/login/ForgotPasswordPage';
 import { AdminDashboard } from './components/admin/AdminDashboard';
 import { FacultyDashboard } from './components/faculty/FacultyDashboard';
 import { StudentDashboard } from './components/student/StudentDashboard';
+import { login as apiLogin, logout as apiLogout, getStoredUser, isAuthenticated } from './services/api';
 import './App.css';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
-  const handleLogin = (role, email) => {
-    // Mock login logic - simulates API response
-    const mockUsers = {
-      admin: { role: 'admin', name: 'Dr. Harun Ur Rashid', email: email, id: 'ADM001' },
-      faculty: { role: 'faculty', name: 'Prof. Rahman', email: email, id: 'FAC001' },
-      student: { role: 'student', name: 'Ayesha Siddiqua', email: email, id: 'STU001' }
-    };
-
-    if (role && mockUsers[role]) {
-      setCurrentUser(mockUsers[role]);
+  // Restore session on mount
+  useEffect(() => {
+    if (isAuthenticated()) {
+      const stored = getStoredUser();
+      if (stored) {
+        setCurrentUser(buildUser(stored));
+      }
     }
+    setLoading(false);
+  }, []);
+
+  // Build a normalized user object from backend response
+  function buildUser(apiUser) {
+    if (!apiUser) return null;
+    const role = apiUser.role;
+    const name = apiUser.name || [apiUser.first_name, apiUser.last_name].filter(Boolean).join(' ') || 'User';
+    const email = apiUser.email;
+    const id = apiUser.student_id || apiUser.faculty_id || apiUser.id || '';
+    return { role, name, email, id };
+  }
+
+  const handleLogin = async (email, password) => {
+    const apiUser = await apiLogin(email, password);
+    const user = buildUser(apiUser);
+    setCurrentUser(user);
+    return user;
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await apiLogout();
     setCurrentUser(null);
   };
 
-  // If not logged in, show Login Page
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // If not logged in, show Login or Forgot Password page
   if (!currentUser) {
-    return <LoginPage onLogin={handleLogin} />;
+    if (showForgotPassword) {
+      return <ForgotPasswordPage onBackToLogin={() => setShowForgotPassword(false)} />;
+    }
+    return (
+      <LoginPage
+        onLogin={handleLogin}
+        onForgotPassword={() => setShowForgotPassword(true)}
+      />
+    );
   }
 
   // If logged in, show the appropriate dashboard

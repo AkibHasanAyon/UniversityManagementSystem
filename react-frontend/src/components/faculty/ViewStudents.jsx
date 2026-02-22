@@ -1,32 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
+import api from '../../services/api';
 import '../../styles/Dashboard.css';
 
 export function ViewStudents() {
-    const [students] = useState([
-        { id: 'STU001', name: 'Ayesha Siddiqua', email: 'ayesha.s@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
-        { id: 'STU002', name: 'Rahim Ahmed', email: 'rahim.a@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
-        { id: 'STU006', name: 'Tanvir Hasan', email: 'tanvir.h@university.edu', course: 'CS301 - Database Systems', enrollmentDate: '2025-08-25' },
-        { id: 'STU007', name: 'Salma Begum', email: 'salma.b@university.edu', course: 'CS302 - Algorithms', enrollmentDate: '2026-01-15' },
-        { id: 'STU008', name: 'Ali Hossain', email: 'ali.h@university.edu', course: 'CS302 - Algorithms', enrollmentDate: '2026-01-15' },
-        { id: 'STU009', name: 'Jasmine Akter', email: 'jasmine.a@university.edu', course: 'CS405 - Software Engineering', enrollmentDate: '2025-08-25' },
-    ]);
-
+    const [students, setStudents] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterCourse, setFilterCourse] = useState('');
+    const [courses, setCourses] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        setLoading(true);
+        api.get('/api/academic/enrollments/')
+            .then(res => {
+                const data = res.data.data || res.data;
+                const results = data.results || data;
+                const mapped = Array.isArray(results) ? results.map(e => ({
+                    id: e.studentId || e.student_id || '',
+                    name: e.studentName || e.student_name || '',
+                    email: e.student_email || e.email || '',
+                    course: `${e.courseCode || e.course_code || ''} - ${e.courseName || e.course_name || ''}`,
+                    enrollmentDate: e.enrollment_date || e.enrollmentDate || '',
+                })) : [];
+                setStudents(mapped);
+
+                const uniqueCourses = [...new Set(mapped.map(s => s.course).filter(Boolean))];
+                setCourses(uniqueCourses);
+            })
+            .catch(err => console.error('Failed to load students:', err))
+            .finally(() => setLoading(false));
+    }, []);
 
     const filteredStudents = students.filter(student => {
         const matchesSearch =
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.id.toLowerCase().includes(searchTerm.toLowerCase());
-
         const matchesCourse = !filterCourse || student.course === filterCourse;
-
         return matchesSearch && matchesCourse;
     });
 
-    const courses = Array.from(new Set(students.map(s => s.course)));
+    if (loading) return <div className="text-center py-8">Loading...</div>;
 
     return (
         <div>
@@ -35,25 +50,13 @@ export function ViewStudents() {
                 <p className="text-gray-600 font-sm">Students enrolled in your courses</p>
             </div>
 
-            {/* Filters */}
             <div className="card mb-6 p-4">
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                     <div className="relative">
                         <Search className="absolute left-3 top-2.5 text-gray-400" size={20} />
-                        <input
-                            type="text"
-                            placeholder="Search by name, email, or ID..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field pl-10"
-                        />
+                        <input type="text" placeholder="Search by name, email, or ID..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="input-field pl-10" />
                     </div>
-
-                    <select
-                        value={filterCourse}
-                        onChange={(e) => setFilterCourse(e.target.value)}
-                        className="input-field"
-                    >
+                    <select value={filterCourse} onChange={(e) => setFilterCourse(e.target.value)} className="input-field">
                         <option value="">All Courses</option>
                         {courses.map(course => (
                             <option key={course} value={course}>{course}</option>
@@ -62,7 +65,6 @@ export function ViewStudents() {
                 </div>
             </div>
 
-            {/* Students Table */}
             <div className="table-container">
                 <div className="table-wrapper">
                     <table className="data-table">
@@ -76,15 +78,19 @@ export function ViewStudents() {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredStudents.map((student) => (
-                                <tr key={student.id}>
-                                    <td className="font-medium">{student.id}</td>
-                                    <td>{student.name}</td>
-                                    <td className="text-muted">{student.email}</td>
-                                    <td>{student.course}</td>
-                                    <td className="text-muted">{student.enrollmentDate}</td>
-                                </tr>
-                            ))}
+                            {filteredStudents.length === 0 ? (
+                                <tr><td colSpan="5" className="text-center py-4 text-gray-500">No students found.</td></tr>
+                            ) : (
+                                filteredStudents.map((student, idx) => (
+                                    <tr key={`${student.id}-${idx}`}>
+                                        <td className="font-medium">{student.id}</td>
+                                        <td>{student.name}</td>
+                                        <td className="text-muted">{student.email}</td>
+                                        <td>{student.course}</td>
+                                        <td className="text-muted">{student.enrollmentDate}</td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
