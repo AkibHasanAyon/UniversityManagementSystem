@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-const BASE_URL = 'https://vondobaba.pythonanywhere.com';
-//const BASE_URL = 'http://localhost:1111';
+//const BASE_URL = 'https://vondobaba.pythonanywhere.com';
+const BASE_URL = 'http://localhost:1111';
 
 // Create axios instance
 const api = axios.create({
