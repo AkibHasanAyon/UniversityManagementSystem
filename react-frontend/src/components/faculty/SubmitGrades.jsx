@@ -12,7 +12,7 @@ export function SubmitGrades() {
     const [submitting, setSubmitting] = useState(false);
 
     useEffect(() => {
-        api.get('/api/academic/courses/')
+        api.get('/api/academic/courses/', { params: { faculty: 'current' } })
             .then(res => {
                 const data = res.data.data || res.data;
                 const results = data.results || data;
@@ -34,18 +34,53 @@ export function SubmitGrades() {
         }
 
         try {
-            const res = await api.get('/api/academic/enrollments/', {
-                params: { course_code: courseCode }
-            });
-            const data = res.data.data || res.data;
-            const results = data.results || data;
-            setGrades(Array.isArray(results) ? results.map(e => ({
-                studentId: e.studentId || e.student_id || '',
-                studentName: e.studentName || e.student_name || '',
-                grade: '',
-            })) : []);
+            const [enrollRes, gradesRes] = await Promise.all([
+                api.get('/api/academic/enrollments/', {
+                    params: { course_code: courseCode }
+                }),
+                api.get('/api/academic/grades/', {
+                    params: { course_code: courseCode }
+                })
+            ]);
+
+            const gradesData = gradesRes.data.data || gradesRes.data;
+            const gradesResults = gradesData.results || gradesData;
+            const gradedStudentIds = new Set();
+            if (Array.isArray(gradesResults)) {
+                gradesResults.forEach(g => {
+                    // Only exclude students graded IN THIS VERY COURSE
+                    const courseMatch = String(g.courseCode || g.course_code) === String(courseCode);
+                    if (courseMatch) {
+                        const studentId = g.studentId || g.student_id;
+                        if (studentId) gradedStudentIds.add(studentId);
+                    }
+                });
+            }
+
+            const data = enrollRes.data.data || enrollRes.data;
+            let results = data.results || data;
+
+            let fetchedGrades = [];
+            if (Array.isArray(results)) {
+                const uniqueStudents = new Map();
+                results.forEach(e => {
+                    const eCourseCode = e.courseCode || e.course_code;
+                    if (eCourseCode && String(eCourseCode) !== String(courseCode)) return;
+
+                    const id = e.studentId || e.student_id;
+                    if (id && !uniqueStudents.has(id) && !gradedStudentIds.has(id)) {
+                        uniqueStudents.set(id, {
+                            studentId: id,
+                            studentName: e.studentName || e.student_name || '',
+                            grade: '',
+                        });
+                    }
+                });
+                fetchedGrades = Array.from(uniqueStudents.values());
+            }
+            setGrades(fetchedGrades);
         } catch (err) {
-            console.error('Failed to load enrollments:', err);
+            console.error('Failed to load enrollments or grades:', err);
             setGrades([]);
         }
     };
@@ -60,16 +95,29 @@ export function SubmitGrades() {
         e.preventDefault();
         setSubmitting(true);
 
+        const gradesToSubmit = grades.filter(g => g.grade);
+
+        if (gradesToSubmit.length === 0) {
+            alert('Please enter at least one grade to submit.');
+            setSubmitting(false);
+            return;
+        }
+
         try {
-            await api.post('/api/academic/grades/bulk/', {
-                course_code: selectedCourse,
-                grades: grades
-                    .filter(g => g.grade)
-                    .map(g => ({
-                        student_id: g.studentId,
-                        grade: g.grade,
-                    })),
-            });
+            await Promise.all(gradesToSubmit.map(g =>
+                api.post('/api/academic/grades/bulk/', {
+                    course_code: selectedCourse,
+                    grades: [
+                        {
+                            student_id: g.studentId,
+                            grade: g.grade,
+                        }
+                    ],
+                }).catch(err => {
+                    console.error("Error submitting grade for", g.studentId, err.response?.data);
+                    throw err; // Re-throw to be caught by Promise.all
+                })
+            ));
 
             setShowSuccess(true);
             setTimeout(() => {
@@ -78,7 +126,7 @@ export function SubmitGrades() {
                 setGrades([]);
             }, 2000);
         } catch (err) {
-            alert('Failed to submit grades: ' + (err.response?.data?.message || err.response?.data?.detail || JSON.stringify(err.response?.data) || err.message));
+            alert('Failed to submit some or all grades. Check console for details. Error: ' + (err.response?.data?.message || err.response?.data?.detail || JSON.stringify(err.response?.data) || err.message));
         } finally {
             setSubmitting(false);
         }
@@ -130,7 +178,6 @@ export function SubmitGrades() {
                                             value={gradeEntry.grade}
                                             onChange={(e) => handleGradeChange(gradeEntry.studentId, e.target.value)}
                                             className="input-field"
-                                            required
                                         >
                                             <option value="">Grade</option>
                                             <option value="A">A</option>
